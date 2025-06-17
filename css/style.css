@@ -1,0 +1,580 @@
+/* أنماط عامة */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Tajawal', sans-serif;
+}
+
+body {
+  background-color: #f5f5f5;
+  color: #333;
+  direction: rtl;
+}
+
+/* شريط التنقل */
+.navbar {
+  background-color: #1a2a3a;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.logo img {
+  height: 40px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+#user-balance {
+  background-color: #2c3e50;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+#user-menu {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  min-width: 200px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.dropdown-menu a {
+  color: #333;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  transition: background-color 0.3s;
+}
+
+.dropdown-menu a:hover {
+  background-color: #f1f1f1;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+/* قسم المصادقة */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 70px);
+  padding: 2rem;
+}
+
+.auth-box {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-box h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #1a2a3a;
+}
+
+.auth-box input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.auth-box button {
+  width: 100%;
+  padding: 12px;
+  background-color: #1a2a3a;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.auth-box button:hover {
+  background-color: #2c3e50;
+}
+
+.privacy-checkbox {
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.privacy-checkbox input {
+  width: auto;
+  margin-left: 10px;
+}
+
+#toggle-auth {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+#toggle-auth a {
+  color: #1a2a3a;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* المحتوى الرئيسي */
+.main-content {
+  padding: 2rem;
+}
+
+.games-section h2, .transactions-section h2 {
+  margin-bottom: 1.5rem;
+  color: #1a2a3a;
+  border-bottom: 2px solid #1a2a3a;
+  padding-bottom: 0.5rem;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.game-card {
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+}
+
+.game-card:hover {
+  transform: translateY(-5px);
+}
+
+.game-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.game-card h3 {
+  padding: 1rem 1rem 0.5rem;
+  color: #1a2a3a;
+}
+
+.game-card p {
+  padding: 0 1rem 1rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.game-card .play-btn {
+  display: block;
+  width: calc(100% - 2rem);
+  margin: 0 1rem 1rem;
+  padding: 10px;
+  background-color: #1a2a3a;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.game-card .play-btn:hover {
+  background-color: #2c3e50;
+}
+
+.transactions-list {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.transaction-item:last-child {
+  border-bottom: none;
+}
+
+.transaction-type {
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.transaction-type.deposit {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.transaction-type.withdrawal {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.transaction-amount {
+  font-weight: bold;
+}
+
+.transaction-method {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.transaction-status {
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+.transaction-status.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.transaction-status.completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.transaction-status.rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.transaction-date {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+/* نافذة اللعبة */
+.game-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.game-modal-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin: 1rem 0;
+}
+
+.game-modal-description {
+  margin: 1rem 0;
+  color: #666;
+}
+
+.game-bet-controls {
+  display: flex;
+  gap: 10px;
+  margin: 1rem 0;
+}
+
+.game-bet-controls input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.game-bet-controls button {
+  padding: 10px 20px;
+  background-color: #1a2a3a;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.game-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.win-message {
+  color: #155724;
+  background-color: #d4edda;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.lose-message {
+  color: #721c24;
+  background-color: #f8d7da;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+/* سياسة الخصوصية */
+.privacy-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.privacy-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.close-privacy {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.privacy-text {
+  margin-top: 1rem;
+}
+
+.privacy-text h3 {
+  margin: 1rem 0 0.5rem;
+  color: #1a2a3a;
+}
+
+.privacy-text ul {
+  margin: 0.5rem 0 1rem 2rem;
+}
+
+.privacy-text p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+/* الصفحات الفرعية للإيداع والسحب */
+.deposit-container, .withdraw-container {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.deposit-container h2, .withdraw-container h2 {
+  margin-bottom: 1.5rem;
+  color: #1a2a3a;
+  text-align: center;
+}
+
+.payment-methods {
+  margin-bottom: 1.5rem;
+}
+
+.method-option {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.method-option:hover {
+  border-color: #1a2a3a;
+}
+
+.method-option input {
+  margin-left: 10px;
+}
+
+.method-icon {
+  width: 40px;
+  height: 40px;
+  margin-left: 1rem;
+}
+
+.method-info h4 {
+  margin-bottom: 0.3rem;
+  color: #1a2a3a;
+}
+
+.method-info p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.amount-input {
+  margin-bottom: 1.5rem;
+}
+
+.amount-input label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.amount-input input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.wallet-info {
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 5px;
+  margin-bottom: 1.5rem;
+}
+
+.wallet-info h4 {
+  margin-bottom: 0.5rem;
+  color: #1a2a3a;
+}
+
+.wallet-number {
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.wallet-number input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px 0 0 5px;
+  font-family: monospace;
+}
+
+.wallet-number button {
+  padding: 10px;
+  background-color: #1a2a3a;
+  color: white;
+  border: none;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #1a2a3a;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+  background-color: #2c3e50;
+}
+
+/* التكيف مع الشاشات الصغيرة */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem;
+  }
+  
+  .games-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .transaction-item {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .transaction-type, .transaction-status {
+    order: 1;
+  }
+  
+  .transaction-amount {
+    order: 2;
+    margin-left: auto;
+  }
+  
+  .transaction-method, .transaction-date {
+    width: 100%;
+    order: 3;
+  }
+}
