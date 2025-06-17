@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlitzBet - إيداع الأموال</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- شريط التنقل -->
+    <nav class="navbar">
+        <div class="logo">
+            <img src="https://via.placeholder.com/150x50?text=BlitzBet" alt="BlitzBet Logo">
+        </div>
+        <div class="user-info">
+            <span id="user-balance">0.00 جنيه</span>
+            <button id="user-menu"><i class="fas fa-user-circle"></i></button>
+            <div class="dropdown-menu" id="dropdown-menu">
+                <a href="index.html"><i class="fas fa-home"></i> الرئيسية</a>
+                <a href="withdraw.html"><i class="fas fa-wallet"></i> سحب</a>
+                <a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- محتوى الإيداع -->
+    <div class="deposit-container">
+        <h2>إيداع الأموال</h2>
+        
+        <div class="payment-methods">
+            <h3>اختر طريقة الدفع:</h3>
+            
+            <label class="method-option">
+                <input type="radio" name="payment-method" value="vodafone" checked>
+                <img src="https://via.placeholder.com/40x40?text=Vodafone" alt="Vodafone Cash" class="method-icon">
+                <div class="method-info">
+                    <h4>فودافون كاش</h4>
+                    <p>الحد الأدنى للإيداع: 20 جنيه</p>
+                </div>
+            </label>
+            
+            <label class="method-option">
+                <input type="radio" name="payment-method" value="etisalat">
+                <img src="https://via.placeholder.com/40x40?text=Etisalat" alt="Etisalat Cash" class="method-icon">
+                <div class="method-info">
+                    <h4>اتصالات كاش</h4>
+                    <p>الحد الأدنى للإيداع: 20 جنيه</p>
+                </div>
+            </label>
+            
+            <label class="method-option">
+                <input type="radio" name="payment-method" value="orange">
+                <img src="https://via.placeholder.com/40x40?text=Orange" alt="Orange Cash" class="method-icon">
+                <div class="method-info">
+                    <h4>أورنج كاش</h4>
+                    <p>الحد الأدنى للإيداع: 20 جنيه</p>
+                </div>
+            </label>
+            
+            <label class="method-option">
+                <input type="radio" name="payment-method" value="visa">
+                <img src="https://via.placeholder.com/40x40?text=Visa" alt="Visa" class="method-icon">
+                <div class="method-info">
+                    <h4>فيزا/ماستركارد</h4>
+                    <p>الحد الأدنى للإيداع: 20 جنيه</p>
+                </div>
+            </label>
+        </div>
+        
+        <div class="amount-input">
+            <label for="deposit-amount">المبلغ المطلوب إيداعه:</label>
+            <input type="number" id="deposit-amount" placeholder="20 جنيه كحد أدنى" min="20">
+        </div>
+        
+        <div class="wallet-info">
+            <h4>رقم المحفظة:</h4>
+            <p>قم بالتحويل إلى الرقم التالي ثم أرسل صورة إثبات التحويل عبر واتساب</p>
+            <div class="wallet-number">
+                <input type="text" id="wallet-number" value="01014752612" readonly>
+                <button class="copy-btn"><i class="fas fa-copy"></i></button>
+            </div>
+        </div>
+        
+        <button class="submit-btn" id="submit-deposit">تأكيد الإيداع</button>
+    </div>
+
+    <script src="js/firebase.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // نسخ رقم المحفظة
+            document.querySelector('.copy-btn').addEventListener('click', () => {
+                const walletInput = document.getElementById('wallet-number');
+                walletInput.select();
+                document.execCommand('copy');
+                alert('تم نسخ الرقم: ' + walletInput.value);
+            });
+            
+            // تغيير رقم المحفظة حسب طريقة الدفع
+            document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    // في الواقع، سيتم جلب الرقم من قاعدة البيانات حسب طريقة الدفع
+                    document.getElementById('wallet-number').value = '01014752612';
+                });
+            });
+            
+            // إرسال طلب الإيداع
+            document.getElementById('submit-deposit').addEventListener('click', () => {
+                const amount = parseFloat(document.getElementById('deposit-amount').value);
+                const method = document.querySelector('input[name="payment-method"]:checked').value;
+                
+                if (isNaN(amount) {
+                    alert('الرجاء إدخال مبلغ صحيح');
+                    return;
+                }
+                
+                if (amount < 20) {
+                    alert('الحد الأدنى للإيداع هو 20 جنيه');
+                    return;
+                }
+                
+                // هنا سيتم إرسال طلب الإيداع إلى قاعدة البيانات
+                alert(`تم إرسال طلب إيداع بقيمة ${amount} جنيه عن طريق ${method}. سيتم مراجعة الطلب من قبل الإدارة.`);
+                
+                // إعادة توجيه إلى الصفحة الرئيسية بعد 3 ثواني
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
