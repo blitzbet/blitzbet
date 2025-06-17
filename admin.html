@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlitzBet - لوحة التحكم الإدارية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- الشريط الجانبي -->
+        <div class="admin-sidebar">
+            <div class="admin-logo">
+                <img src="https://via.placeholder.com/150x50?text=BlitzBet" alt="BlitzBet Admin">
+            </div>
+            <ul class="admin-menu">
+                <li class="active" data-tab="dashboard"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</li>
+                <li data-tab="users"><i class="fas fa-users"></i> المستخدمين</li>
+                <li data-tab="games"><i class="fas fa-gamepad"></i> إدارة الألعاب</li>
+                <li data-tab="transactions"><i class="fas fa-exchange-alt"></i> المعاملات</li>
+                <li data-tab="settings"><i class="fas fa-cog"></i> الإعدادات</li>
+                <li data-tab="agents"><i class="fas fa-headset"></i> وكلاء الدعم</li>
+            </ul>
+            <div class="admin-logout">
+                <a href="#" id="admin-logout"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>
+            </div>
+        </div>
+
+        <!-- المحتوى الرئيسي -->
+        <div class="admin-content">
+            <!-- لوحة التحكم -->
+            <div class="tab-content active" id="dashboard-tab">
+                <h2>لوحة التحكم</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>إجمالي المستخدمين</h3>
+                        <p id="total-users">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>إجمالي الإيداعات</h3>
+                        <p id="total-deposits">0 جنيه</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>إجمالي السحوبات</h3>
+                        <p id="total-withdrawals">0 جنيه</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>صافي الأرباح</h3>
+                        <p id="net-profit">0 جنيه</p>
+                    </div>
+                </div>
+                <div class="recent-activity">
+                    <h3>آخر النشاطات</h3>
+                    <div class="activity-list" id="activity-list">
+                        <!-- سيتم ملؤها ديناميكياً -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- إدارة المستخدمين -->
+            <div class="tab-content" id="users-tab">
+                <h2>إدارة المستخدمين</h2>
+                <div class="search-bar">
+                    <input type="text" id="user-search" placeholder="ابحث عن مستخدم...">
+                    <button id="search-user"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="users-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>الاسم</th>
+                                <th>البريد الإلكتروني</th>
+                                <th>الرصيد</th>
+                                <th>تاريخ التسجيل</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list">
+                            <!-- سيتم ملؤها ديناميكياً -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- إدارة الألعاب -->
+            <div class="tab-content" id="games-tab">
+                <h2>إدارة الألعاب</h2>
+                <button class="add-game-btn" id="add-game-btn">إضافة لعبة جديدة</button>
+                <div class="games-grid">
+                    <div class="game-card" id="game-template" style="display: none;">
+                        <img src="" alt="Game Image" class="game-image">
+                        <h3 class="game-name"></h3>
+                        <p class="game-description"></p>
+                        <div class="game-actions">
+                            <button class="edit-game"><i class="fas fa-edit"></i> تعديل</button>
+                            <button class="delete-game"><i class="fas fa-trash"></i> حذف</button>
+                            <button class="adjust-odds"><i class="fas fa-percentage"></i> ضبط الاحتمالات</button>
+                        </div>
+                    </div>
+                    <div id="games-container">
+                        <!-- سيتم ملؤها ديناميكياً -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- إضافة/تعديل لعبة -->
+            <div class="modal" id="game-modal">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2 id="game-modal-title">إضافة لعبة جديدة</h2>
+                    <form id="game-form">
+                        <input type="hidden" id="game-id">
+                        <div class="form-group">
+                            <label for="game-name">اسم اللعبة</label>
+                            <input type="text" id="game-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="game-description">وصف اللعبة</label>
+                            <textarea id="game-description" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="game-image">رابط صورة اللعبة</label>
+                            <input type="text" id="game-image" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="game-odds">احتمالات الربح (٪)</label>
+                            <input type="number" id="game-odds" min="1" max="100" required>
+                        </div>
+                        <button type="submit" id="save-game">حفظ</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ضبط احتمالات اللعبة -->
+            <div class="modal" id="odds-modal">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2>ضبط احتمالات اللعبة</h2>
+                    <div class="odds-control">
+                        <h3 id="current-game-name"></h3>
+                        <div class="slider-container">
+                            <label for="win-odds">احتمالات الربح: <span id="win-odds-value">50</span>%</label>
+                            <input type="range" id="win-odds" min="1" max="100" value="50">
+                        </div>
+                        <p class="note">ملاحظة: زيادة احتمالات الربح تقلل من أرباح المنصة والعكس صحيح</p>
+                        <button id="save-odds">حفظ التعديلات</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- إدارة المعاملات -->
+            <div class="tab-content" id="transactions-tab">
+                <h2>إدارة المعاملات</h2>
+                <div class="transaction-filters">
+                    <select id="transaction-type">
+                        <option value="all">كل المعاملات</option>
+                        <option value="deposit">الإيداعات</option>
+                        <option value="withdrawal">السحوبات</option>
+                    </select>
+                    <select id="transaction-status">
+                        <option value="all">كل الحالات</option>
+                        <option value="pending">قيد الانتظار</option>
+                        <option value="completed">مكتملة</option>
+                        <option value="rejected">مرفوضة</option>
+                    </select>
+                    <button id="filter-transactions">تصفية</button>
+                </div>
+                <div class="transactions-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>رقم المعاملة</th>
+                                <th>المستخدم</th>
+                                <th>النوع</th>
+                                <th>المبلغ</th>
+                                <th>طريقة الدفع</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-list">
+                            <!-- سيتم ملؤها ديناميكياً -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- الإعدادات -->
+            <div class="tab-content" id="settings-tab">
+                <h2>إعدادات النظام</h2>
+                <form id="system-settings">
+                    <div class="settings-section">
+                        <h3>إعدادات الدفع</h3>
+                        <div class="form-group">
+                            <label for="min-deposit">الحد الأدنى للإيداع (جنيه)</label>
+                            <input type="number" id="min-deposit" value="20" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="min-withdrawal">الحد الأدنى للسحب (جنيه)</label>
+                            <input type="number" id="min-withdrawal" value="60" min="1" required>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>أرقام المحافظ الإلكترونية</h3>
+                        <div class="form-group">
+                            <label for="vodafone-cash">فودافون كاش</label>
+                            <input type="text" id="vodafone-cash" value="01014752612" required>
+                            <button type="button" class="copy-btn" data-target="vodafone-cash"><i class="fas fa-copy"></i> نسخ</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="etisalat-cash">اتصالات كاش</label>
+                            <input type="text" id="etisalat-cash" value="01014752612" required>
+                            <button type="button" class="copy-btn" data-target="etisalat-cash"><i class="fas fa-copy"></i> نسخ</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="orange-cash">أورنج كاش</label>
+                            <input type="text" id="orange-cash" value="01014752612" required>
+                            <button type="button" class="copy-btn" data-target="orange-cash"><i class="fas fa-copy"></i> نسخ</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>إعدادات المنصة</h3>
+                        <div class="form-group">
+                            <label for="platform-profit">نسبة ربح المنصة (٪)</label>
+                            <input type="number" id="platform-profit" value="15" min="1" max="50" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="save-settings">حفظ الإعدادات</button>
+                </form>
+            </div>
+
+            <!-- وكلاء الدعم -->
+            <div class="tab-content" id="agents-tab">
+                <h2>إدارة وكلاء الدعم</h2>
+                <button class="add-agent-btn" id="add-agent-btn">إضافة وكيل جديد</button>
+                <div class="agents-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>الاسم</th>
+                                <th>البريد الإلكتروني</th>
+                                <th>رقم الهاتف</th>
+                                <th>عدد المعاملات</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agents-list">
+                            <!-- سيتم ملؤها ديناميكياً -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- إضافة/تعديل وكيل -->
+            <div class="modal" id="agent-modal">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2 id="agent-modal-title">إضافة وكيل دعم</h2>
+                    <form id="agent-form">
+                        <input type="hidden" id="agent-id">
+                        <div class="form-group">
+                            <label for="agent-name">اسم الوكيل</label>
+                            <input type="text" id="agent-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="agent-email">البريد الإلكتروني</label>
+                            <input type="email" id="agent-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="agent-phone">رقم الهاتف</label>
+                            <input type="text" id="agent-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="agent-password">كلمة المرور</label>
+                            <input type="password" id="agent-password" required>
+                        </div>
+                        <button type="submit" id="save-agent">حفظ</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/firebase.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
