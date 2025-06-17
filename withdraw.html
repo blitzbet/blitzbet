@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlitzBet - سحب الأموال</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- شريط التنقل -->
+    <nav class="navbar">
+        <div class="logo">
+            <img src="https://via.placeholder.com/150x50?text=BlitzBet" alt="BlitzBet Logo">
+        </div>
+        <div class="user-info">
+            <span id="user-balance">0.00 جنيه</span>
+            <button id="user-menu"><i class="fas fa-user-circle"></i></button>
+            <div class="dropdown-menu" id="dropdown-menu">
+                <a href="index.html"><i class="fas fa-home"></i> الرئيسية</a>
+                <a href="deposit.html"><i class="fas fa-money-bill-wave"></i> إيداع</a>
+                <a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- محتوى السحب -->
+    <div class="withdraw-container">
+        <h2>سحب الأموال</h2>
+        
+        <div class="payment-methods">
+            <h3>اختر طريقة السحب:</h3>
+            
+            <label class="method-option">
+                <input type="radio" name="withdraw-method" value="vodafone" checked>
+                <img src="https://via.placeholder.com/40x40?text=Vodafone" alt="Vodafone Cash" class="method-icon">
+                <div class="method-info">
+                    <h4>فودافون كاش</h4>
+                    <p>الحد الأدنى للسحب: 60 جنيه</p>
+                </div>
+            </label>
+            
+            <label class="method-option">
+                <input type="radio" name="withdraw-method" value="etisalat">
+                <img src="https://via.placeholder.com/40x40?text=Etisalat" alt="Etisalat Cash" class="method-icon">
+                <div class="method-info">
+                    <h4>اتصالات كاش</h4>
+                    <p>الحد الأدنى للسحب: 60 جنيه</p>
+                </div>
+            </label>
+            
+            <label class="method-option">
+                <input type="radio" name="withdraw-method" value="orange">
+                <img src="https://via.placeholder.com/40x40?text=Orange" alt="Orange Cash" class="method-icon">
+                <div class="method-info">
+                    <h4>أورنج كاش</h4>
+                    <p>الحد الأدنى للسحب: 60 جنيه</p>
+                </div>
+            </label>
+        </div>
+        
+        <div class="amount-input">
+            <label for="withdraw-amount">المبلغ المطلوب سحبه:</label>
+            <input type="number" id="withdraw-amount" placeholder="60 جنيه كحد أدنى" min="60">
+        </div>
+        
+        <div class="wallet-info">
+            <h4>رقم المحفظة:</h4>
+            <p>أدخل رقم المحفظة الذي تريد استلام الأموال عليه</p>
+            <div class="wallet-number">
+                <input type="text" id="wallet-number" placeholder="أدخل رقم هاتفك">
+            </div>
+        </div>
+        
+        <button class="submit-btn" id="submit-withdraw">تأكيد السحب</button>
+    </div>
+
+    <script src="js/firebase.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // إرسال طلب السحب
+            document.getElementById('submit-withdraw').addEventListener('click', () => {
+                const amount = parseFloat(document.getElementById('withdraw-amount').value);
+                const method = document.querySelector('input[name="withdraw-method"]:checked').value;
+                const walletNumber = document.getElementById('wallet-number').value;
+                
+                if (isNaN(amount)) {
+                    alert('الرجاء إدخال مبلغ صحيح');
+                    return;
+                }
+                
+                if (amount < 60) {
+                    alert('الحد الأدنى للسحب هو 60 جنيه');
+                    return;
+                }
+                
+                if (!walletNumber || walletNumber.length < 10) {
+                    alert('الرجاء إدخال رقم محفظة صحيح');
+                    return;
+                }
+                
+                // هنا سيتم إرسال طلب السحب إلى قاعدة البيانات
+                alert(`تم إرسال طلب سحب بقيمة ${amount} جنيه إلى رقم ${walletNumber} عن طريق ${method}. سيتم مراجعة الطلب من قبل الإدارة.`);
+                
+                // إعادة توجيه إلى الصفحة الرئيسية بعد 3 ثواني
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
