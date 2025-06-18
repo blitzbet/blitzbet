@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة تحكم BlitzBet</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="dark-mode">
+    <h1>لوحة تحكم المدير</h1>
+    <section>
+        <h2>تعديل رقم الحساب</h2>
+        <input type="text" id="accountNumber" placeholder="رقم الحساب الحالي: 01014752612">
+        <button onclick="updateAccountNumber()">تحديث الرقم</button>
+    </section>
+
+    <section>
+        <h2>إدارة الألعاب</h2>
+        <button onclick="addGame()">إضافة لعبة جديدة</button>
+        <button onclick="deleteGame()">حذف لعبة</button>
+    </section>
+
+    <section>
+        <h2>التحكم في الحظ</h2>
+        <input type="range" min="0" max="100" value="40" onchange="updateLuck(this.value)">
+        <p>نسبة الفوز: <span id="luckValue">40%</span></p>
+    </section>
+
+    <script>
+        function updateAccountNumber() {
+            const newNum = document.getElementById('accountNumber').value;
+            alert("تم تحديث الرقم إلى: " + newNum);
+        }
+
+        function addGame() {
+            alert("أضف لعبة جديدة من خلال ملف games/");
+        }
+
+        function deleteGame() {
+            alert("اختر اللعبة التي تريد حذفها");
+        }
+
+        function updateLuck(value) {
+            document.getElementById("luckValue").innerText = value + "%";
+        }
+    </script>
+</body>
+</html>
