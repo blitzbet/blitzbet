@@ -1,22 +1,1104 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>BlitzBet - المراهنة السريعة</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dark-mode.css">
-</head>
-<body class="dark-mode">
-    <div class="login-container">
-        <h1>مرحباً بك في BlitzBet</h1>
-        <input type="text" id="username" placeholder="اسم المستخدم">
-        <input type="email" id="email" placeholder="البريد الإلكتروني">
-        <input type="password" id="password" placeholder="كلمة المرور">
-        <button onclick="register()">تسجيل</button>
-        <button onclick="login()">دخول</button>
-        <p>ليس لديك حساب؟ <a href="#">سجل الآن</a></p>
-    </div>
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
-    <script type="module" src="js/auth.js"></script>
-</body>
-</html>
+// Font Awesome for icons
+const fontAwesomeScript = document.createElement('script');
+fontAwesomeScript.src = 'https://kit.fontawesome.com/a076d05399.js'; // Replace with your Font Awesome Kit ID or use a common CDN
+fontAwesomeScript.crossOrigin = 'anonymous';
+document.head.appendChild(fontAwesomeScript);
+
+// Firebase configuration provided by the user
+const firebaseConfig = {
+    apiKey: "AIzaSyCvdwQFD-10U2zxuReqBBtnmgLSIrIsXpY",
+    authDomain: "cheat-sploiter.firebaseapp.com",
+    databaseURL: "https://cheat-sploiter-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "cheat-sploiter",
+    storageBucket: "cheat-sploiter.firebasestorage.app",
+    messagingSenderId: "678384025021",
+    appId: "1:678384025021:web:77aeb36a72250caa7ba6d4",
+    measurementId: "G-ZWMXX7R728"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Context for Firebase and User data
+const AppContext = createContext();
+
+// App ID from environment or default
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'blitzbet-default-app';
+
+// Utility function to generate a 9-digit random ID
+const generateUserId = () => {
+    return Math.floor(100000000 + Math.random() * 900000000).toString();
+};
+
+const BotNames = ['أحمد', 'سارة', 'عمر', 'نور', 'يوسف', 'ليلى', 'خالد', 'منى']; // Bot names in Arabic
+
+function AppProvider({ children }) {
+    const [user, setUser] = useState(null);
+    const [userData, setUserData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [isAuthReady, setIsAuthReady] = useState(false); // To ensure auth is ready before Firestore ops
+    const [adminSettings, setAdminSettings] = useState(null);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                setUser(currentUser);
+                // Corrected path for user profiles: artifacts/{appId}/user_profiles/{userId}
+                const userDocRef = doc(db, `artifacts/${appId}/user_profiles/${currentUser.uid}`);
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists()) {
+                    setUserData(userDocSnap.data());
+                } else {
+                    // Create new user profile if not exists (e.g., if signed in anonymously first)
+                    const newUserData = {
+                        id: generateUserId(), // Unique 9-digit ID
+                        email: currentUser.email || 'anonymous',
+                        name: currentUser.displayName || 'Guest',
+                        balance: 0,
+                        createdAt: serverTimestamp(),
+                        canWithdraw: true,
+                        canChat: true
+                    };
+                    await setDoc(userDocRef, newUserData);
+                    setUserData(newUserData);
+                }
+            } else {
+                setUser(null);
+                setUserData(null);
+            }
+            setLoading(false);
+            setIsAuthReady(true);
+        });
+
+        // Attempt to sign in with custom token or anonymously
+        const signInInitial = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Error during initial Firebase sign-in:", error);
+                // Fallback to anonymous if custom token fails
+                await signInAnonymously(auth);
+            }
+        };
+
+        signInInitial();
+
+        // Listen for admin settings
+        // Path: artifacts/{appId}/shared_data/adminSettings (collection/document/collection/document)
+        const adminSettingsRef = doc(db, `artifacts/${appId}/shared_data/adminSettings`);
+        const unsubscribeAdminSettings = onSnapshot(adminSettingsRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setAdminSettings(docSnap.data());
+            } else {
+                // Default settings if not found
+                setAdminSettings({
+                    vodafoneCash: '01014752612',
+                    etisalatCash: '01014752612',
+                    orangeCash: '01014752612',
+                    minDeposit: 20,
+                    minWithdraw: 60,
+                    diceWinProb: 0.45, // Default 45% win probability for dice
+                    coinWinProb: 0.48, // Default 48% win probability for coin
+                });
+            }
+        });
+
+        return () => {
+            unsubscribe();
+            unsubscribeAdminSettings();
+        };
+    }, []);
+
+    // Listen for real-time user data updates
+    useEffect(() => {
+        if (user && isAuthReady) {
+            // Corrected path for user profiles: artifacts/${appId}/user_profiles/${user.uid}
+            const userDocRef = doc(db, `artifacts/${appId}/user_profiles/${user.uid}`);
+            const unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    setUserData(docSnap.data());
+                } else {
+                    setUserData(null); // User document might have been deleted
+                }
+            });
+            return () => unsubscribeUser();
+        }
+    }, [user, isAuthReady]);
+
+    const register = async (email, password, name) => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            // Corrected path for user profiles: artifacts/${appId}/user_profiles/${userCredential.user.uid}
+            const userDocRef = doc(db, `artifacts/${appId}/user_profiles/${userCredential.user.uid}`);
+            const newUserData = {
+                id: generateUserId(),
+                email: email,
+                name: name,
+                balance: 0,
+                createdAt: serverTimestamp(),
+                canWithdraw: true,
+                canChat: true
+            };
+            await setDoc(userDocRef, newUserData);
+            setUserData(newUserData);
+            return { success: true };
+        } catch (error) {
+            console.error("Error registering:", error);
+            return { success: false, message: error.message };
+        }
+    };
+
+    const login = async (email, password) => {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            return { success: true };
+        } catch (error) {
+            console.error("Error logging in:", error);
+            return { success: false, message: error.message };
+        }
+    };
+
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            setUser(null);
+            setUserData(null);
+        } catch (error) {
+            console.error("Error logging out:", error);
+        }
+    };
+
+    const updateBalance = async (amount) => {
+        if (!user || !userData) return;
+        // Corrected path for user profiles: artifacts/${appId}/user_profiles/${user.uid}
+        const userDocRef = doc(db, `artifacts/${appId}/user_profiles/${user.uid}`);
+        try {
+            await updateDoc(userDocRef, {
+                balance: userData.balance + amount
+            });
+            setUserData(prev => ({ ...prev, balance: prev.balance + amount }));
+            return true;
+        } catch (error) {
+            console.error("Error updating balance:", error);
+            return false;
+        }
+    };
+
+    const addTransaction = async (type, method, amount, status, details = {}) => {
+        if (!user || !userData) return;
+        // Path: artifacts/{appId}/shared_data/transactions (collection/document/collection/document)
+        const transactionsColRef = collection(db, `artifacts/${appId}/shared_data/transactions`);
+        try {
+            await addDoc(transactionsColRef, {
+                userId: user.uid,
+                userName: userData.name,
+                userAppId: userData.id,
+                type, // 'deposit' or 'withdraw'
+                method,
+                amount,
+                status, // 'pending', 'approved', 'rejected'
+                timestamp: serverTimestamp(),
+                ...details
+            });
+            return true;
+        } catch (error) {
+            console.error("Error adding transaction:", error);
+            return false;
+        }
+    };
+
+    // ✨ Gemini API Integration: Smart Tip Generation
+    const getSmartTip = async (userBalance, gameName = "المراهنات بشكل عام") => {
+        const prompt = `بصفتك مساعدًا خبيرًا في منصة BlitzBet للمراهنات، قم بتقديم نصيحة ذكية وموجزة ومحفزة لمستخدم لديه رصيد يبلغ ${userBalance} جنيه مصري. اجعل النصيحة تتعلق بـ ${gameName} أو استراتيجية المراهنة بشكل عام. اجعل الرسالة باللغة العربية، ودائمًا إيجابية ومشجعة. على سبيل المثال: "يا بطل! برصيدك الحالي، يمكنك تجربة كذا وكذا لتحقيق أرباح أكبر!"`;
+        let chatHistory = [];
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        const payload = { contents: chatHistory };
+        const apiKey = ""; // Canvas will automatically provide this
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                console.error("Gemini API returned an unexpected structure or no content.");
+                return "عذرًا، لم أتمكن من إنشاء نصيحة الآن. يرجى المحاولة لاحقًا.";
+            }
+        } catch (error) {
+            console.error("Error calling Gemini API for smart tip:", error);
+            return "عذرًا، حدث خطأ أثناء الاتصال. يرجى المحاولة لاحقًا.";
+        }
+    };
+
+    // ✨ Gemini API Integration: Bot Message Generation
+    const generateBotMessage = async (botName) => {
+        const prompt = `أنت روبوت محادثة ودود في منصة مراهنات BlitzBet. قم بإنشاء رسالة قصيرة ومحفزة باللغة العربية، تبدو وكأنك كسبت مبلغًا كبيرًا وتتحدث عن مدى روعة BlitzBet، أو عن استراتيجية لعب مثيرة. لا تكرر الرسائل السابقة وكن مبدعًا. على سبيل المثال: "أنا كسبت 15,000 جنيه في روليت! BlitzBet الأفضل!" أو "جربت استراتيجية جديدة في لعبة الكروت وكسبت كتير، المنصة دي أمان!"`;
+        let chatHistory = [];
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        const payload = { contents: chatHistory };
+        const apiKey = ""; // Canvas will automatically provide this
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                console.error("Gemini API returned an unexpected structure or no content for bot message.");
+                return `مرحباً! أنا ${botName} وقد استمتعت كثيرًا في BlitzBet!`;
+            }
+        } catch (error) {
+            console.error("Error calling Gemini API for bot message:", error);
+            return `مرحباً! أنا ${botName} وأراهن على BlitzBet!`;
+        }
+    };
+
+
+    const value = {
+        user,
+        userData,
+        loading,
+        isAuthReady,
+        adminSettings,
+        register,
+        login,
+        logout,
+        updateBalance,
+        addTransaction,
+        db,
+        appId,
+        getSmartTip, // Add getSmartTip to context
+        generateBotMessage // Add generateBotMessage to context
+    };
+
+    return (
+        <AppContext.Provider value={value}>
+            {children}
+        </AppContext.Provider>
+    );
+}
+
+// Custom Modal Component
+const Modal = ({ show, onClose, title, children }) => {
+    if (!show) return null;
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-6 rounded-xl shadow-2xl w-full max-w-md backdrop-blur-sm border border-gray-700">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold text-emerald-400">{title}</h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white transition duration-300">
+                        <i className="fas fa-times fa-lg"></i>
+                    </button>
+                </div>
+                <div className="modal-body">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Notification Component
+const Notification = ({ message, type, onClose }) => {
+    if (!message) return null;
+    let bgColor = '';
+    if (type === 'success') bgColor = 'bg-green-600';
+    if (type === 'error') bgColor = 'bg-red-600';
+    if (type === 'info') bgColor = 'bg-blue-600';
+
+    return (
+        <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 ${bgColor} text-white p-3 rounded-lg shadow-lg z-50 animate-fade-in-up flex items-center justify-between`}>
+            <span>{message}</span>
+            <button onClick={onClose} className="ml-4 text-white hover:text-gray-200">
+                <i className="fas fa-times"></i>
+            </button>
+        </div>
+    );
+};
+
+// Custom Hook for Notification
+const useNotification = () => {
+    const [notification, setNotification] = useState({ message: '', type: '' });
+
+    const showNotification = (message, type, duration = 3000) => {
+        setNotification({ message, type });
+        if (duration) {
+            setTimeout(() => setNotification({ message: '', type: '' }), duration);
+        }
+    };
+
+    const hideNotification = () => {
+        setNotification({ message: '', type: '' });
+    };
+
+    return [notification, showNotification, hideNotification];
+};
+
+// Login/Register Component
+function LoginRegister() {
+    const { register, login, loading, isAuthReady } = useContext(AppContext);
+    const [isLogin, setIsLogin] = useState(true);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+    const [notification, showNotification, hideNotification] = useNotification();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!isAuthReady) {
+            showNotification("Firebase not ready yet. Please wait.", "info");
+            return;
+        }
+
+        if (isLogin) {
+            const result = await login(email, password);
+            if (!result.success) {
+                showNotification(result.message, "error");
+            }
+        } else {
+            const result = await register(email, password, name);
+            if (result.success) {
+                showNotification("Registration successful! You are now logged in.", "success");
+                setIsLogin(true); // Switch to login after successful registration
+            } else {
+                showNotification(result.message, "error");
+            }
+        }
+    };
+
+    if (loading || !isAuthReady) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+                <div className="animate-spin rounded-full h-20 w-20 border-t-2 border-b-2 border-emerald-400"></div>
+                <p className="ml-4 text-emerald-400 text-xl">Loading BlitzBet...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center p-4 font-inter text-gray-200">
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-lg border border-gray-700">
+                <h1 className="text-4xl font-bold text-center text-emerald-400 mb-6">BlitzBet</h1>
+                <h2 className="text-2xl font-semibold text-center mb-6">{isLogin ? 'Login' : 'Register'}</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {!isLogin && (
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Name</label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition duration-300 text-white"
+                                required={!isLogin}
+                            />
+                        </div>
+                    )}
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition duration-300 text-white"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition duration-300 text-white"
+                            required
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition duration-300 shadow-lg transform hover:scale-105"
+                    >
+                        {isLogin ? 'Login' : 'Register'}
+                    </button>
+                </form>
+                <p className="text-center mt-6 text-gray-400">
+                    {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
+                    <button onClick={() => setIsLogin(!isLogin)} className="text-emerald-400 hover:underline font-semibold">
+                        {isLogin ? 'Register here' : 'Login here'}
+                    </button>
+                </p>
+            </div>
+            <Notification message={notification.message} type={notification.type} onClose={hideNotification} />
+        </div>
+    );
+}
+
+// Main App Dashboard and Layout
+function MainApp() {
+    const { user, userData, logout, adminSettings } = useContext(AppContext);
+    const [currentView, setCurrentView] = useState('games'); // 'games', 'deposit', 'withdraw', 'chat'
+    const [showDepositWithdrawModal, setShowDepositWithdrawModal] = useState(false);
+    const [isDepositMode, setIsDepositMode] = useState(true);
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        const savedTheme = localStorage.getItem('theme');
+        return savedTheme === 'dark';
+    });
+
+    useEffect(() => {
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    }, [isDarkMode]);
+
+    const toggleDarkMode = () => {
+        setIsDarkMode(prevMode => !prevMode);
+    };
+
+    const openDepositModal = () => {
+        setIsDepositMode(true);
+        setShowDepositWithdrawModal(true);
+    };
+
+    const openWithdrawModal = () => {
+        setIsDepositMode(false);
+        setShowDepositWithdrawModal(true);
+    };
+
+    if (!user || !userData) return null; // Should not happen if LoginRegister works correctly
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black dark:from-black dark:to-gray-950 text-gray-200 dark:text-gray-100 font-inter transition-colors duration-500">
+            {/* Header */}
+            <header className="bg-gradient-to-r from-emerald-700 to-emerald-900 p-4 shadow-xl flex flex-col sm:flex-row justify-between items-center rounded-b-3xl">
+                <div className="flex items-center mb-3 sm:mb-0">
+                    <h1 className="text-3xl font-extrabold text-white mr-4">BlitzBet</h1>
+                    <span className="bg-emerald-800 text-white text-xs px-3 py-1 rounded-full opacity-90">LIVE</span>
+                </div>
+                <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6 text-lg font-semibold">
+                    <div className="flex items-center bg-emerald-800 px-4 py-2 rounded-full shadow-inner">
+                        <i className="fas fa-user-circle text-white mr-2"></i>
+                        <span>{userData.name} (ID: {userData.id})</span>
+                    </div>
+                    <div className="flex items-center bg-emerald-800 px-4 py-2 rounded-full shadow-inner">
+                        <i className="fas fa-wallet text-white mr-2"></i>
+                        <span className="text-yellow-300">{userData.balance.toFixed(2)} EGP</span>
+                    </div>
+                    <button onClick={toggleDarkMode} className="text-white hover:text-yellow-300 transition duration-300 text-2xl">
+                        <i className={isDarkMode ? "fas fa-sun" : "fas fa-moon"}></i>
+                    </button>
+                    <button onClick={logout} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition duration-300 shadow-md">
+                        <i className="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </header>
+
+            {/* Navigation */}
+            <nav className="bg-gray-800 dark:bg-gray-900 p-3 shadow-inner sticky top-0 z-10 rounded-b-xl backdrop-blur-sm bg-opacity-80 dark:bg-opacity-80">
+                <ul className="flex justify-around text-lg font-medium">
+                    <li>
+                        <button onClick={() => setCurrentView('games')}
+                            className={`px-4 py-2 rounded-full transition duration-300 ${currentView === 'games' ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-300 hover:text-emerald-400'}`}>
+                            <i className="fas fa-gamepad mr-2"></i>Games
+                        </button>
+                    </li>
+                    <li>
+                        <button onClick={openDepositModal}
+                            className="px-4 py-2 rounded-full transition duration-300 text-gray-300 hover:text-emerald-400">
+                            <i className="fas fa-money-check-alt mr-2"></i>Deposit
+                        </button>
+                    </li>
+                    <li>
+                        <button onClick={openWithdrawModal}
+                            className="px-4 py-2 rounded-full transition duration-300 text-gray-300 hover:text-emerald-400">
+                            <i className="fas fa-hand-holding-usd mr-2"></i>Withdraw
+                        </button>
+                    </li>
+                    <li>
+                        <button onClick={() => setCurrentView('chat')}
+                            className={`px-4 py-2 rounded-full transition duration-300 ${currentView === 'chat' ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-300 hover:text-emerald-400'}`}>
+                            <i className="fas fa-comments mr-2"></i>Chat
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+
+            {/* Main Content */}
+            <main className="container mx-auto p-4 mt-8">
+                {currentView === 'games' && <GamesSection />}
+                {currentView === 'chat' && <ChatSection />}
+            </main>
+
+            {/* Deposit/Withdraw Modal */}
+            <DepositWithdrawModal
+                show={showDepositWithdrawModal}
+                onClose={() => setShowDepositWithdrawModal(false)}
+                isDeposit={isDepositMode}
+                minDeposit={adminSettings?.minDeposit || 20}
+                minWithdraw={adminSettings?.minWithdraw || 60}
+                adminSettings={adminSettings}
+            />
+        </div>
+    );
+}
+
+// Games Section
+function GamesSection() {
+    const { userData, updateBalance, adminSettings, getSmartTip } = useContext(AppContext);
+    const [notification, showNotification, hideNotification] = useNotification();
+    const [smartTip, setSmartTip] = useState('');
+    const [showTipModal, setShowTipModal] = useState(false);
+
+    const handleGamePlay = async (gameName, betAmount, winProb) => {
+        if (!userData || userData.balance < betAmount) {
+            showNotification("رصيدك غير كافٍ!", "error");
+            return;
+        }
+        if (betAmount <= 0) {
+            showNotification("يجب أن يكون مبلغ الرهان إيجابيًا!", "error");
+            return;
+        }
+
+        const win = Math.random() < winProb;
+        let resultMessage = '';
+        let balanceChange = 0;
+
+        if (win) {
+            balanceChange = betAmount * 2; // Example: Double the bet for win
+            await updateBalance(betAmount); // Add profit
+            resultMessage = `تهانينا! لقد ربحت ${balanceChange.toFixed(2)} جنيه مصري!`;
+            showNotification(resultMessage, "success");
+        } else {
+            balanceChange = -betAmount;
+            await updateBalance(-betAmount); // Deduct bet
+            resultMessage = `لقد خسرت ${betAmount.toFixed(2)} جنيه مصري. حاول مرة أخرى!`;
+            showNotification(resultMessage, "error");
+        }
+    };
+
+    const handleGetSmartTip = async (gameName) => {
+        if (!userData) {
+            showNotification("يرجى تسجيل الدخول للحصول على نصيحة ذكية.", "info");
+            return;
+        }
+        setShowTipModal(true);
+        setSmartTip("جاري إنشاء نصيحة ذكية...");
+        const tip = await getSmartTip(userData.balance, gameName);
+        setSmartTip(tip);
+    };
+
+    // Dice Roll Game Component
+    const DiceRollGame = ({ winProb }) => {
+        const [betAmount, setBetAmount] = useState(10);
+        const [diceResult, setDiceResult] = useState(null);
+        const [isRolling, setIsRolling] = useState(false);
+
+        const playDice = async () => {
+            if (isRolling) return;
+            setIsRolling(true);
+            setDiceResult(null); // Clear previous result
+            showNotification("جاري رمي النرد...", "info", 1000);
+
+            setTimeout(async () => {
+                const roll = Math.floor(Math.random() * 6) + 1; // Simulate dice roll 1-6
+                setDiceResult(roll);
+                const win = Math.random() < winProb;
+
+                if (win) {
+                    await handleGamePlay('Dice Roll', betAmount, winProb);
+                } else {
+                    await handleGamePlay('Dice Roll', betAmount, winProb); // handleGamePlay already has the win/loss logic
+                }
+                setIsRolling(false);
+            }, 1500); // Simulate roll time
+        };
+
+        return (
+            <div className="bg-gray-800 dark:bg-gray-900 p-6 rounded-2xl shadow-xl border border-gray-700 backdrop-blur-sm text-center">
+                <h3 className="text-3xl font-bold text-emerald-400 mb-4">لعبة النرد</h3>
+                <p className="text-gray-300 mb-4">ألق النرد واختبر حظك! فرصة الربح الحالية: {(winProb * 100).toFixed(0)}%</p>
+                <div className="flex items-center justify-center mb-6">
+                    <label className="mr-3 text-lg">الرهان:</label>
+                    <input
+                        type="number"
+                        value={betAmount}
+                        onChange={(e) => setBetAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-24 p-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                        min="1"
+                    />
+                    <span className="ml-2 text-lg">جنيه مصري</span>
+                </div>
+                {diceResult && (
+                    <div className="text-5xl font-extrabold text-yellow-400 mb-6 animate-bounce">
+                        <i className={`fas fa-dice-${diceResult}`}></i>
+                    </div>
+                )}
+                <button
+                    onClick={playDice}
+                    disabled={isRolling || userData.balance < betAmount}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isRolling ? 'جاري الرمي...' : 'رمي النرد'}
+                </button>
+                <button
+                    onClick={() => handleGetSmartTip('لعبة النرد')}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 mt-3 rounded-lg transition duration-300 shadow-lg transform hover:scale-105"
+                >
+                    احصل على نصيحة ذكية
+                </button>
+            </div>
+        );
+    };
+
+    // Coin Flip Game Component
+    const CoinFlipGame = ({ winProb }) => {
+        const [betAmount, setBetAmount] = useState(10);
+        const [choice, setChoice] = useState('heads'); // 'heads' or 'tails'
+        const [flipResult, setFlipResult] = useState(null); // 'heads' or 'tails'
+        const [isFlipping, setIsFlipping] = useState(false);
+
+        const playCoinFlip = async () => {
+            if (isFlipping) return;
+            setIsFlipping(true);
+            setFlipResult(null);
+            showNotification("جاري قلب العملة...", "info", 1000);
+
+            setTimeout(async () => {
+                const actualResult = Math.random() < 0.5 ? 'heads' : 'tails';
+                setFlipResult(actualResult);
+                const win = (choice === actualResult) && (Math.random() < winProb);
+
+                if (win) {
+                    await handleGamePlay('Coin Flip', betAmount, winProb);
+                } else {
+                    await handleGamePlay('Coin Flip', betAmount, winProb); // handleGamePlay handles win/loss
+                }
+                setIsFlipping(false);
+            }, 1500); // Simulate flip time
+        };
+
+        return (
+            <div className="bg-gray-800 dark:bg-gray-900 p-6 rounded-2xl shadow-xl border border-gray-700 backdrop-blur-sm text-center">
+                <h3 className="text-3xl font-bold text-emerald-400 mb-4">لعبة قلب العملة</h3>
+                <p className="text-gray-300 mb-4">اختر وجهًا أو ذيلًا! فرصة الربح الحالية: {(winProb * 100).toFixed(0)}%</p>
+                <div className="flex items-center justify-center space-x-4 mb-6">
+                    <button
+                        onClick={() => setChoice('heads')}
+                        className={`px-6 py-3 rounded-full text-white font-bold transition duration-300 ${choice === 'heads' ? 'bg-emerald-600 shadow-lg' : 'bg-gray-600 hover:bg-gray-500'}`}
+                    >
+                        <i className="fas fa-coins mr-2"></i>وجه
+                    </button>
+                    <button
+                        onClick={() => setChoice('tails')}
+                        className={`px-6 py-3 rounded-full text-white font-bold transition duration-300 ${choice === 'tails' ? 'bg-emerald-600 shadow-lg' : 'bg-gray-600 hover:bg-gray-500'}`}
+                    >
+                        <i className="fas fa-coins mr-2 transform rotate-180"></i>ذيل
+                    </button>
+                </div>
+                <div className="flex items-center justify-center mb-6">
+                    <label className="mr-3 text-lg">الرهان:</label>
+                    <input
+                        type="number"
+                        value={betAmount}
+                        onChange={(e) => setBetAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-24 p-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                        min="1"
+                    />
+                    <span className="ml-2 text-lg">جنيه مصري</span>
+                </div>
+                {flipResult && (
+                    <div className="text-5xl font-extrabold text-yellow-400 mb-6 animate-spin-once">
+                        {flipResult === 'heads' ? <i className="fas fa-coins"></i> : <i className="fas fa-coins transform rotate-180"></i>}
+                        <p className="text-lg mt-2">{flipResult === 'heads' ? 'وجه!' : 'ذيل!'}</p>
+                    </div>
+                )}
+                <button
+                    onClick={playCoinFlip}
+                    disabled={isFlipping || userData.balance < betAmount}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isFlipping ? 'جاري القلب...' : 'اقلب العملة'}
+                </button>
+                <button
+                    onClick={() => handleGetSmartTip('لعبة قلب العملة')}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 mt-3 rounded-lg transition duration-300 shadow-lg transform hover:scale-105"
+                >
+                    احصل على نصيحة ذكية
+                </button>
+            </div>
+        );
+    };
+
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Notification message={notification.message} type={notification.type} onClose={hideNotification} />
+            <DiceRollGame winProb={adminSettings?.diceWinProb || 0.45} />
+            <CoinFlipGame winProb={adminSettings?.coinWinProb || 0.48} />
+            {/* Add more games here following the same pattern */}
+
+            {/* Smart Tip Modal */}
+            <Modal show={showTipModal} onClose={() => setShowTipModal(false)} title="نصيحة ذكية">
+                <p className="text-lg text-gray-200">{smartTip}</p>
+            </Modal>
+        </div>
+    );
+}
+
+// Deposit/Withdrawal Modal Component
+function DepositWithdrawModal({ show, onClose, isDeposit, minDeposit, minWithdraw, adminSettings }) {
+    const { userData, addTransaction, updateBalance } = useContext(AppContext);
+    const [amount, setAmount] = useState('');
+    const [method, setMethod] = useState('vodafoneCash');
+    const [senderNumber, setSenderNumber] = useState('');
+    const [notification, showNotification, hideNotification] = useNotification();
+
+    const handleCopy = (text) => {
+        navigator.clipboard.writeText(text)
+            .then(() => showNotification('تم النسخ إلى الحافظة!', 'success', 2000))
+            .catch(err => showNotification('فشل النسخ. يرجى النسخ يدويًا.', 'error', 2000));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const parsedAmount = parseFloat(amount);
+
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            showNotification("الرجاء إدخال مبلغ صحيح.", "error");
+            return;
+        }
+
+        if (isDeposit) {
+            if (parsedAmount < minDeposit) {
+                showNotification(`الحد الأدنى للإيداع هو ${minDeposit} جنيه مصري.`, "error");
+                return;
+            }
+            const success = await addTransaction('deposit', method, parsedAmount, 'pending', { senderNumber });
+            if (success) {
+                showNotification("تم إرسال طلب الإيداع بنجاح! في انتظار موافقة المسؤول.", "success");
+                setAmount('');
+                setSenderNumber('');
+                onClose();
+            } else {
+                showNotification("فشل إرسال طلب الإيداع.", "error");
+            }
+        } else { // Withdraw
+            if (parsedAmount < minWithdraw) {
+                showNotification(`الحد الأدنى للسحب هو ${minWithdraw} جنيه مصري.`, "error");
+                return;
+            }
+            if (!userData.canWithdraw) {
+                showNotification("السحب معطل حاليًا لحسابك. يرجى الاتصال بالدعم.", "error");
+                return;
+            }
+            if (userData.balance < parsedAmount) {
+                showNotification("رصيدك غير كافٍ للسحب.", "error");
+                return;
+            }
+            const success = await addTransaction('withdraw', method, parsedAmount, 'pending', { receiverNumber: senderNumber }); // senderNumber is receiver here
+            if (success) {
+                // For a real app, this would be admin approved. Here, we simulate immediate deduction.
+                await updateBalance(-parsedAmount); // Deduct immediately for simulation
+                showNotification("تم إرسال طلب السحب بنجاح! في انتظار موافقة المسؤول.", "success");
+                setAmount('');
+                setSenderNumber('');
+                onClose();
+            } else {
+                showNotification("فشل إرسال طلب السحب.", "error");
+            }
+        }
+    };
+
+    const eWalletNumber = (methodName) => {
+        switch (methodName) {
+            case 'vodafoneCash': return adminSettings?.vodafoneCash || '01014752612';
+            case 'etisalatCash': return adminSettings?.etisalatCash || '01014752612';
+            case 'orangeCash': return adminSettings?.orangeCash || '01014752612';
+            default: return '';
+        }
+    };
+
+    return (
+        <Modal show={show} onClose={onClose} title={isDeposit ? 'إيداع الأموال' : 'سحب الأموال'}>
+            <Notification message={notification.message} type={notification.type} onClose={hideNotification} />
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium mb-1">المبلغ (جنيه مصري)</label>
+                    <input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-white"
+                        placeholder={isDeposit ? `الحد الأدنى: ${minDeposit} جنيه مصري` : `الحد الأدنى: ${minWithdraw} جنيه مصري`}
+                        min={isDeposit ? minDeposit : minWithdraw}
+                        required
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium mb-1">طريقة الدفع</label>
+                    <select
+                        value={method}
+                        onChange={(e) => setMethod(e.target.value)}
+                        className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-white"
+                    >
+                        <option value="vodafoneCash">فودافون كاش</option>
+                        <option value="etisalatCash">اتصالات كاش</option>
+                        <option value="orangeCash">أورانج كاش</option>
+                        <option value="visa">فيزا</option>
+                        <option value="fawry">فوري</option>
+                        <option value="payeer">باير</option>
+                        <option value="paypal">باي بال</option>
+                        <option value="binance">باينانس</option>
+                        <option value="crypto">عملات مشفرة</option>
+                    </select>
+                </div>
+
+                {(method === 'vodafoneCash' || method === 'etisalatCash' || method === 'orangeCash') && isDeposit && (
+                    <div className="bg-gray-700 p-4 rounded-lg border border-gray-600">
+                        <p className="text-yellow-300 mb-2 font-semibold">يرجى تحويل المبلغ إلى هذا الرقم:</p>
+                        <div className="flex items-center justify-between bg-gray-800 p-3 rounded-lg">
+                            <span className="text-white text-lg font-mono">{eWalletNumber(method)}</span>
+                            <button
+                                type="button"
+                                onClick={() => handleCopy(eWalletNumber(method))}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-full transition duration-300"
+                                title="نسخ الرقم"
+                            >
+                                <i className="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2">بعد التحويل، أدخل الرقم الذي قمت بالتحويل منه.</p>
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium mb-1">رقم هاتفك المرسل منه</label>
+                            <input
+                                type="text"
+                                value={senderNumber}
+                                onChange={(e) => setSenderNumber(e.target.value)}
+                                className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-white"
+                                placeholder="مثال: 01xxxxxxxxx"
+                                required
+                            />
+                        </div>
+                    </div>
+                )}
+                 {(method === 'vodafoneCash' || method === 'etisalatCash' || method === 'orangeCash') && !isDeposit && (
+                    <div className="mt-4">
+                        <label className="block text-sm font-medium mb-1">رقم هاتفك المستلم</label>
+                        <input
+                            type="text"
+                            value={senderNumber} // Re-using senderNumber for receiver number here
+                            onChange={(e) => setSenderNumber(e.target.value)}
+                            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-white"
+                            placeholder="مثال: 01xxxxxxxxx"
+                            required
+                        />
+                    </div>
+                )}
+
+                <button
+                    type="submit"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition duration-300 shadow-lg transform hover:scale-105"
+                >
+                    {isDeposit ? 'إرسال طلب الإيداع' : 'إرسال طلب السحب'}
+                </button>
+            </form>
+        </Modal>
+    );
+}
+
+// Chat Section
+function ChatSection() {
+    const { user, userData, db, appId, generateBotMessage } = useContext(AppContext);
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState('');
+    const [notification, showNotification, hideNotification] = useNotification();
+    const messagesEndRef = React.useRef(null);
+
+    const bannedWords = ['كلمة_مسيئة_1', 'كلمة_مسيئة_2', 'كلمة_مسيئة_3', 'سب', 'شتيمة']; // Example banned words in Arabic
+
+    // Scroll to bottom of chat
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        // Path: artifacts/{appId}/shared_data/chat (collection/document/collection)
+        const chatColRef = collection(db, `artifacts/${appId}/shared_data/chat`);
+        const q = query(chatColRef); // No orderBy to avoid index issues, sort in memory
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetchedMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Sort messages by timestamp after fetching
+            fetchedMessages.sort((a, b) => (a.timestamp?.toDate() || 0) - (b.timestamp?.toDate() || 0));
+            setMessages(fetchedMessages);
+        });
+
+        return () => unsubscribe();
+    }, [db, appId]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    // ✨ Gemini API Integration: Enhanced Bot logic
+    useEffect(() => {
+        const postBotMessage = async () => {
+            if (!userData || !userData.canChat) return; // Only if user can chat
+            const randomBotName = BotNames[Math.floor(Math.random() * BotNames.length)];
+            const botMessageText = await generateBotMessage(randomBotName);
+
+            // Path: artifacts/{appId}/shared_data/chat (collection/document/collection)
+            const chatColRef = collection(db, `artifacts/${appId}/shared_data/chat`);
+            await addDoc(chatColRef, {
+                userId: `bot-${randomBotName.toLowerCase()}`,
+                userName: randomBotName,
+                text: botMessageText,
+                timestamp: serverTimestamp(),
+                isBot: true,
+                language: 'ar' // Assuming Arabic for bots
+            });
+        };
+
+        const botInterval = setInterval(postBotMessage, 10000 + Math.random() * 10000); // Post every 10-20 seconds
+        return () => clearInterval(botInterval);
+    }, [userData, db, appId, generateBotMessage]);
+
+
+    const containsBannedWord = (text) => {
+        return bannedWords.some(word => text.toLowerCase().includes(word));
+    };
+
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        if (newMessage.trim() === '') return;
+        if (!userData.canChat) {
+            showNotification("تم حظرك من استخدام الدردشة.", "error");
+            setNewMessage('');
+            return;
+        }
+
+        if (containsBannedWord(newMessage)) {
+            showNotification("رسالتك تحتوي على كلمات غير لائقة ولا يمكن إرسالها.", "error");
+            // Optionally, you could flag the user for review here
+            setNewMessage('');
+            return;
+        }
+
+        // Path: artifacts/{appId}/shared_data/chat (collection/document/collection)
+        const chatColRef = collection(db, `artifacts/${appId}/shared_data/chat`);
+        try {
+            await addDoc(chatColRef, {
+                userId: user.uid,
+                userName: userData.name,
+                text: newMessage,
+                timestamp: serverTimestamp(),
+                isBot: false
+            });
+            setNewMessage('');
+        } catch (error) {
+            console.error("Error sending message:", error);
+            showNotification("فشل إرسال الرسالة.", "error");
+        }
+    };
+
+    return (
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-xl border border-gray-700 backdrop-blur-sm p-6 max-w-4xl mx-auto flex flex-col h-[70vh] min-h-[500px]">
+            <Notification message={notification.message} type={notification.type} onClose={hideNotification} />
+            <h2 className="text-3xl font-bold text-emerald-400 mb-4 text-center">الدردشة العامة</h2>
+            <div className="flex-1 overflow-y-auto pr-2 mb-4 scrollbar-thin scrollbar-thumb-emerald-600 scrollbar-track-gray-700">
+                {messages.map((msg) => (
+                    <div
+                        key={msg.id}
+                        className={`mb-3 p-3 rounded-lg max-w-[80%] ${msg.isBot
+                            ? 'bg-blue-800 text-blue-100 self-start mr-auto'
+                            : msg.userId === user.uid
+                                ? 'bg-emerald-600 text-white self-end ml-auto'
+                                : 'bg-gray-700 text-gray-100 self-start mr-auto'
+                            } shadow-md`}
+                    >
+                        <p className="font-semibold text-sm mb-1">
+                            {msg.userName}
+                            {msg.isBot && <span className="ml-2 text-xs opacity-70">(بوت)</span>}
+                        </p>
+                        <p className="text-lg">{msg.text}</p>
+                        <p className="text-xs text-right opacity-70 mt-1">
+                            {msg.timestamp?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'جاري الإرسال...'}
+                        </p>
+                    </div>
+                ))}
+                <div ref={messagesEndRef} />
+            </div>
+            <form onSubmit={handleSendMessage} className="flex space-x-3">
+                <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    className="flex-1 p-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-white"
+                    placeholder="اكتب رسالتك..."
+                    disabled={!userData.canChat}
+                />
+                <button
+                    type="submit"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-5 rounded-lg transition duration-300 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!userData.canChat}
+                >
+                    <i className="fas fa-paper-plane mr-2"></i>إرسال
+                </button>
+            </form>
+        </div>
+    );
+}
+
+
+function App() {
+    const { user, loading } = useContext(AppContext);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+                <div className="animate-spin rounded-full h-20 w-20 border-t-2 border-b-2 border-emerald-400"></div>
+                <p className="ml-4 text-emerald-400 text-xl">جاري تحميل BlitzBet...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="App">
+            {user ? <MainApp /> : <LoginRegister />}
+        </div>
+    );
+}
+
+// Wrap the main App component with the provider
+export default function ProvidedApp() {
+    return (
+        <AppProvider>
+            <App />
+        </AppProvider>
+    );
+}
