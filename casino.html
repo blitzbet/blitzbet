@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>BlitzBet - الكازينو</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .game-card {
+            border: 1px solid #444;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <header>
+        <h1>BlitzBet - الكازينو</h1>
+        <nav>
+            <a href="deposit-withdraw.html">إيداع / سحب</a>
+            <a href="#">حسابي</a>
+            <a href="#">الدعم</a>
+        </nav>
+    </header>
+
+    <section class="games">
+        <div class="game-card" onclick="startGame('slots')">
+            <h3>ماكينة القمار</h3>
+            <img src="https://example.com/slots-icon.png"  alt="ماكينة القمار">
+        </div>
+        <div class="game-card" onclick="startGame('roulette')">
+            <h3>الروليت</h3>
+            <img src="https://example.com/roulette-icon.png"  alt="الروليت">
+        </div>
+        <!-- Add more games -->
+    </section>
+
+    <footer>
+        <p>جميع الحقوق محفوظة © 2025 BlitzBet</p>
+    </footer>
+
+    <script>
+        function startGame(gameName) {
+            window.location.href = `games/${gameName}.html`;
+        }
+    </script>
+</body>
+</html>
