@@ -3,77 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تحكم سيارة بلوتوث - Arduino</title>
+    <title>تحكم سيارة بلوتوث</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
+            font-family: Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             touch-action: manipulation;
         }
 
         body {
-            background: #000000;
-            color: #ffffff;
+            background: #000;
+            color: white;
             min-height: 100vh;
             padding: 10px;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(0, 100, 0, 0.1) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(100, 0, 0, 0.1) 0%, transparent 20%);
-        }
-
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
         }
 
         .header {
             text-align: center;
-            padding: 20px 0;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #00ff00;
-            background: linear-gradient(90deg, #001100, #003300);
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            padding: 15px 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #0f0;
         }
 
         .header h1 {
-            font-size: 1.6rem;
-            color: #00ff00;
+            font-size: 1.5rem;
+            color: #0f0;
             margin-bottom: 5px;
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
 
         .header p {
-            color: #88ff88;
+            color: #8f8;
             font-size: 0.9rem;
         }
 
-        .status-bar {
-            background: #111111;
-            border-radius: 12px;
+        .status {
+            background: #111;
+            border-radius: 10px;
             padding: 15px;
             margin-bottom: 15px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            border: 2px solid #222222;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
         }
 
         .status-item {
             text-align: center;
-            padding: 10px;
-            background: #1a1a1a;
-            border-radius: 8px;
-            border: 1px solid #333;
         }
 
         .status-label {
-            color: #888888;
+            color: #888;
             font-size: 0.8rem;
             margin-bottom: 5px;
         }
@@ -81,39 +64,33 @@
         .status-value {
             font-size: 1.1rem;
             font-weight: bold;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .status-value.connected { color: #00ff00; }
-        .status-value.disconnected { color: #ff0000; }
-        .status-value.fire { color: #ff5500; }
-        .status-value.safe { color: #00ff00; }
+        .connected { color: #0f0; }
+        .disconnected { color: #f00; }
+        .fire { color: #f90; }
+        .safe { color: #0f0; }
 
         .controls {
-            background: #111111;
-            border-radius: 12px;
+            background: #111;
+            border-radius: 10px;
             padding: 20px;
             margin-bottom: 15px;
-            border: 2px solid #222222;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
         }
 
         .section-title {
-            color: #00ff00;
+            color: #0f0;
             margin-bottom: 15px;
             text-align: center;
-            font-size: 1.3rem;
-            text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+            font-size: 1.2rem;
         }
 
         .joystick {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .row {
@@ -122,163 +99,86 @@
             gap: 15px;
         }
 
-        .control-btn {
-            width: 75px;
-            height: 75px;
+        .btn {
+            width: 70px;
+            height: 70px;
             border: none;
-            border-radius: 15px;
-            background: linear-gradient(145deg, #222222, #1a1a1a);
+            border-radius: 10px;
+            background: #222;
             color: white;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.15s;
-            box-shadow: 
-                5px 5px 10px #0a0a0a,
-                -5px -5px 10px #282828;
-            position: relative;
-            overflow: hidden;
+            transition: all 0.1s;
         }
 
-        .control-btn:active {
-            transform: scale(0.92);
-            box-shadow: 
-                2px 2px 5px #0a0a0a inset,
-                -2px -2px 5px #282828 inset;
+        .btn:active {
+            background: #0f0;
+            transform: scale(0.95);
         }
 
-        .control-btn:disabled {
-            opacity: 0.4;
+        .btn:disabled {
+            opacity: 0.3;
             cursor: not-allowed;
             transform: none !important;
         }
 
         .center-btn {
-            background: linear-gradient(145deg, #ff5500, #cc4400);
-            box-shadow: 
-                5px 5px 10px #0a0a0a,
-                -5px -5px 10px #282828;
+            background: #f90;
         }
 
-        .center-btn:active {
-            background: linear-gradient(145deg, #cc4400, #aa3300);
-        }
-
-        .fire-control {
-            background: #111111;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 2px solid #222222;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-        }
-
-        .fire-btns {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .fire-btn {
-            padding: 16px;
-            border: none;
+        .sensor {
+            background: #111;
             border-radius: 10px;
-            background: linear-gradient(145deg, #ff3300, #cc2200);
-            color: white;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.15s;
-            box-shadow: 0 5px 15px rgba(255, 51, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .fire-btn:active:not(:disabled) {
-            transform: scale(0.95);
-            background: linear-gradient(145deg, #cc2200, #aa1100);
-        }
-
-        .fire-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .fire-btn.stop {
-            background: linear-gradient(145deg, #666666, #444444);
-            box-shadow: 0 5px 15px rgba(102, 102, 102, 0.3);
-        }
-
-        .fire-btn.stop:active:not(:disabled) {
-            background: linear-gradient(145deg, #444444, #222222);
-        }
-
-        .sensor-data {
-            background: #111111;
-            border-radius: 12px;
-            padding: 20px;
+            padding: 15px;
             margin-bottom: 15px;
-            border: 2px solid #222222;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
         }
 
         .sensor-display {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 10px;
             text-align: center;
-        }
-
-        .sensor-item {
-            background: #1a1a1a;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid #333;
         }
 
         .sensor-value {
             font-size: 1.8rem;
             font-weight: bold;
-            color: #ffffff;
+            color: white;
             margin: 10px 0;
-            text-shadow: 0 0 10px currentColor;
         }
 
         .sensor-label {
-            font-size: 0.9rem;
-            color: #888888;
+            font-size: 0.8rem;
+            color: #888;
         }
 
         .flame-bar {
             width: 100%;
-            height: 20px;
-            background: #222222;
-            border-radius: 10px;
+            height: 10px;
+            background: #222;
+            border-radius: 5px;
             margin-top: 10px;
             overflow: hidden;
-            border: 1px solid #333;
-            position: relative;
         }
 
         .flame-level {
             height: 100%;
-            background: linear-gradient(90deg, #00ff00, #ffff00, #ff5500, #ff0000);
-            border-radius: 10px;
-            transition: width 0.5s ease;
+            background: #0f0;
+            border-radius: 5px;
+            transition: width 0.5s;
             width: 0%;
         }
 
-        .connection-panel {
-            background: #111111;
-            border-radius: 12px;
-            padding: 20px;
+        .connection {
+            background: #111;
+            border-radius: 10px;
+            padding: 15px;
             margin-bottom: 15px;
-            border: 2px solid #222222;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
         }
 
         .connection-status {
@@ -289,20 +189,18 @@
             margin-bottom: 15px;
             padding: 10px;
             background: #1a1a1a;
-            border-radius: 10px;
-            border: 1px solid #333;
+            border-radius: 8px;
         }
 
         .connection-dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: #ff0000;
-            animation: none;
+            background: #f00;
         }
 
         .connection-dot.connected {
-            background: #00ff00;
+            background: #0f0;
             animation: pulse 2s infinite;
         }
 
@@ -312,339 +210,164 @@
             100% { opacity: 1; }
         }
 
-        .bluetooth-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .bluetooth-btn {
-            padding: 16px;
+        .connect-btn {
+            width: 100%;
+            padding: 15px;
             border: none;
-            border-radius: 10px;
-            background: linear-gradient(145deg, #0066cc, #004499);
+            border-radius: 8px;
+            background: #06f;
             color: white;
             font-size: 1.1rem;
             cursor: pointer;
-            transition: all 0.15s;
-            box-shadow: 0 5px 15px rgba(0, 102, 204, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .bluetooth-btn:active:not(:disabled) {
-            transform: scale(0.95);
-            background: linear-gradient(145deg, #004499, #002266);
-        }
-
-        .bluetooth-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .bluetooth-btn.disconnect {
-            background: linear-gradient(145deg, #cc0000, #990000);
-            box-shadow: 0 5px 15px rgba(204, 0, 0, 0.3);
-        }
-
-        .device-list {
-            margin-top: 15px;
-            max-height: 150px;
-            overflow-y: auto;
-            background: #1a1a1a;
-            border-radius: 10px;
-            padding: 10px;
-            border: 1px solid #333;
-        }
-
-        .device-item {
-            padding: 12px;
-            margin-bottom: 8px;
-            background: #222222;
-            border-radius: 8px;
-            cursor: pointer;
             transition: all 0.2s;
-            border: 1px solid #333;
         }
 
-        .device-item:active {
-            background: #333333;
+        .connect-btn:active:not(:disabled) {
+            background: #05e;
             transform: scale(0.98);
         }
 
-        .device-item:hover {
-            border-color: #00ff00;
+        .connect-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
 
-        .device-name {
-            color: #ffffff;
-            font-weight: bold;
-            margin-bottom: 3px;
-        }
-
-        .device-id {
-            color: #888888;
-            font-size: 0.8rem;
-            font-family: monospace;
+        .connect-btn.disconnect {
+            background: #f00;
         }
 
         .logs {
-            background: #111111;
-            border-radius: 12px;
-            padding: 20px;
+            background: #111;
+            border-radius: 10px;
+            padding: 15px;
             margin-bottom: 15px;
-            border: 2px solid #222222;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
         }
 
         .log-box {
-            background: #000000;
-            border-radius: 10px;
-            padding: 15px;
-            height: 150px;
+            background: #000;
+            border-radius: 8px;
+            padding: 10px;
+            height: 120px;
             overflow-y: auto;
-            font-size: 0.85rem;
-            font-family: 'Courier New', monospace;
-            border: 1px solid #333;
-            direction: ltr;
+            font-size: 0.9rem;
+            font-family: monospace;
         }
 
-        .log-entry {
-            padding: 5px 0;
+        .log {
+            padding: 3px 0;
             border-bottom: 1px solid #222;
-            color: #cccccc;
         }
 
         .log-time {
-            color: #888888;
-            float: right;
-            margin-left: 10px;
+            color: #888;
             font-size: 0.8rem;
+            float: left;
         }
-
-        .log-entry.info { color: #00aaff; }
-        .log-entry.success { color: #00ff00; }
-        .log-entry.error { color: #ff0000; }
-        .log-entry.warning { color: #ffff00; }
-        .log-entry.bluetooth { color: #ff00ff; }
 
         footer {
             text-align: center;
-            padding: 20px 0;
-            color: #666666;
+            padding: 15px 0;
+            color: #666;
             font-size: 0.8rem;
-            border-top: 1px solid #222;
-            margin-top: 10px;
-        }
-
-        .instructions {
-            background: rgba(0, 100, 0, 0.1);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-            border: 1px solid #00ff00;
-        }
-
-        .instructions h4 {
-            color: #00ff00;
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-
-        .instructions ul {
-            padding-right: 20px;
-            color: #88ff88;
-            font-size: 0.85rem;
-            line-height: 1.5;
-        }
-
-        .instructions li {
-            margin-bottom: 8px;
-        }
-
-        /* تخصيص شريط التمرير */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #222222;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #00ff00;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #88ff88;
-        }
-
-        @media (max-width: 380px) {
-            .control-btn {
-                width: 65px;
-                height: 65px;
-                font-size: 1.6rem;
-            }
-            
-            .sensor-value {
-                font-size: 1.5rem;
-            }
-            
-            .bluetooth-buttons {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚗 نظام التحكم في السيارة الذكية</h1>
-            <p>مشروع تخرج - التحكم عبر البلوتوث</p>
-        </div>
-
-        <div class="status-bar">
-            <div class="status-item">
-                <div class="status-label">حالة الاتصال</div>
-                <div class="status-value disconnected" id="connection-text">غير متصل</div>
-            </div>
-            <div class="status-item">
-                <div class="status-label">حالة الحريق</div>
-                <div class="status-value safe" id="fire-status">آمن</div>
-            </div>
-            <div class="status-item">
-                <div class="status-label">قراءة الحساس</div>
-                <div class="status-value" id="sensor-value">---</div>
-            </div>
-        </div>
-
-        <div class="controls">
-            <h2 class="section-title">🎮 لوحة التحكم</h2>
-            <div class="joystick">
-                <div class="row">
-                    <button class="control-btn" id="forward-btn" data-command="F">↑</button>
-                </div>
-                <div class="row">
-                    <button class="control-btn" id="left-btn" data-command="L">←</button>
-                    <button class="control-btn center-btn" id="stop-btn" data-command="S">⏹</button>
-                    <button class="control-btn" id="right-btn" data-command="R">→</button>
-                </div>
-                <div class="row">
-                    <button class="control-btn" id="backward-btn" data-command="B">↓</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="fire-control">
-            <h2 class="section-title">🧯 نظام إطفاء الحرائق</h2>
-            <div class="fire-btns">
-                <button class="fire-btn" id="pump-on-btn">
-                    <span>🔥</span> تشغيل المضخة
-                </button>
-                <button class="fire-btn stop" id="pump-off-btn">
-                    <span>⏹</span> إيقاف المضخة
-                </button>
-            </div>
-        </div>
-
-        <div class="sensor-data">
-            <h2 class="section-title">📊 بيانات حساس اللهب</h2>
-            <div class="sensor-display">
-                <div class="sensor-item">
-                    <div class="sensor-label">القراءة الحالية</div>
-                    <div class="sensor-value" id="current-value">0</div>
-                    <div class="flame-bar">
-                        <div class="flame-level" id="flame-level"></div>
-                    </div>
-                </div>
-                <div class="sensor-item">
-                    <div class="sensor-label">عتبة الحريق</div>
-                    <div class="sensor-value" style="color: #ff5500;">500</div>
-                    <div class="instructions" style="margin-top: 10px; font-size: 0.8rem;">
-                        أقل من 500 = حريق
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="connection-panel">
-            <h2 class="section-title">📡 اتصال البلوتوث</h2>
-            <div class="connection-status">
-                <div class="connection-dot" id="connection-dot"></div>
-                <span id="connection-status">جاهز للاتصال</span>
-            </div>
-            
-            <div class="bluetooth-buttons">
-                <button class="bluetooth-btn" id="scan-btn">
-                    <span>🔍</span> بحث عن أجهزة
-                </button>
-                <button class="bluetooth-btn disconnect" id="disconnect-btn" style="display: none;">
-                    <span>❌</span> قطع الاتصال
-                </button>
-            </div>
-
-            <div class="device-list" id="device-list">
-                <div class="device-item" style="text-align: center; color: #888;">
-                    سيظهر هنا قائمة الأجهزة المتاحة
-                </div>
-            </div>
-            
-            <div class="instructions">
-                <h4>📋 تعليمات الاتصال:</h4>
-                <ul>
-                    <li>1. تأكد من تشغيل البلوتوث على الهاتف والـ HC-05</li>
-                    <li>2. اضغط على زر "بحث عن أجهزة"</li>
-                    <li>3. اختر HC-05 من القائمة (كلمة المرور: 1234)</li>
-                    <li>4. اضغط على اسم الجهاز للاتصال</li>
-                    <li>5. استخدم لوحة التحكم بعد الاتصال</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="logs">
-            <h2 class="section-title">📝 سجل الأحداث</h2>
-            <div class="log-box" id="log-box">
-                <div class="log-entry info">🚀 نظام التحكم جاهز للعمل <span class="log-time">10:30:15</span></div>
-                <div class="log-entry info">📱 اضغط زر البحث للاتصال بالسيارة <span class="log-time">10:30:20</span></div>
-            </div>
-        </div>
-
-        <footer>
-            <p>مشروع تخرج - نظام سيارة ذكية مع إطفاء حرائق</p>
-            <p>Arduino Uno + HC-05 + L298N + IR Flame Sensor</p>
-        </footer>
+    <div class="header">
+        <h1>🚗 تحكم سيارة بلوتوث</h1>
+        <p>مشروع تخرج - نظام إطفاء حرائق</p>
     </div>
+
+    <div class="status">
+        <div class="status-item">
+            <div class="status-label">الاتصال</div>
+            <div class="status-value disconnected" id="connection-text">غير متصل</div>
+        </div>
+        <div class="status-item">
+            <div class="status-label">الحريق</div>
+            <div class="status-value safe" id="fire-status">آمن</div>
+        </div>
+        <div class="status-item">
+            <div class="status-label">حساس اللهب</div>
+            <div class="status-value" id="flame-value">-</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <h2 class="section-title">🎮 تحكم في السيارة</h2>
+        <div class="joystick">
+            <div class="row">
+                <button class="btn" id="forward-btn">↑</button>
+            </div>
+            <div class="row">
+                <button class="btn" id="left-btn">←</button>
+                <button class="btn center-btn" id="stop-btn">⏹</button>
+                <button class="btn" id="right-btn">→</button>
+            </div>
+            <div class="row">
+                <button class="btn" id="backward-btn">↓</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sensor">
+        <h2 class="section-title">📊 بيانات الحساس</h2>
+        <div class="sensor-display">
+            <div class="sensor-item">
+                <div class="sensor-value" id="sensor-value">0</div>
+                <div class="sensor-label">قراءة الحساس</div>
+                <div class="flame-bar">
+                    <div class="flame-level" id="flame-level"></div>
+                </div>
+            </div>
+            <div class="sensor-item">
+                <div class="sensor-value" style="color: #f90;">500</div>
+                <div class="sensor-label">عتبة الحريق</div>
+                <div style="color: #888; font-size: 0.8rem; margin-top: 10px;">
+                    أقل من 500 = حريق
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="connection">
+        <h2 class="section-title">📡 اتصال بلوتوث</h2>
+        <div class="connection-status">
+            <div class="connection-dot" id="connection-dot"></div>
+            <span id="connection-status">جاهز للاتصال</span>
+        </div>
+        <button class="connect-btn" id="connect-btn">اتصل بالسيارة</button>
+    </div>
+
+    <div class="logs">
+        <h2 class="section-title">📝 سجل الأحداث</h2>
+        <div class="log-box" id="log-box">
+            <div class="log">🚀 جاهز للاتصال <span class="log-time">10:30</span></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>مشروع تخرج - Arduino Uno + HC-05</p>
+    </footer>
 
     <script>
         // حالة التطبيق
-        const appState = {
-            connected: false,
-            fireDetected: false,
-            sprinklerActive: false,
-            flameValue: 0,
-            fireThreshold: 500,
-            device: null,
-            characteristic: null,
-            server: null,
-            devices: []
-        };
+        let connected = false;
+        let device = null;
+        let characteristic = null;
+        let flameValue = 0;
+        let fireThreshold = 500;
 
         // عناصر DOM
         const connectionText = document.getElementById('connection-text');
         const fireStatus = document.getElementById('fire-status');
+        const flameValueEl = document.getElementById('flame-value');
         const sensorValue = document.getElementById('sensor-value');
-        const currentValue = document.getElementById('current-value');
         const flameLevel = document.getElementById('flame-level');
         const connectionDot = document.getElementById('connection-dot');
-        const connectionStatus = document.getElementById('connection-status');
-        const scanBtn = document.getElementById('scan-btn');
-        const disconnectBtn = document.getElementById('disconnect-btn');
-        const deviceList = document.getElementById('device-list');
+        const connectionStatusEl = document.getElementById('connection-status');
+        const connectBtn = document.getElementById('connect-btn');
         const logBox = document.getElementById('log-box');
         
         // أزرار التحكم
@@ -653,235 +376,210 @@
         const leftBtn = document.getElementById('left-btn');
         const rightBtn = document.getElementById('right-btn');
         const stopBtn = document.getElementById('stop-btn');
-        const pumpOnBtn = document.getElementById('pump-on-btn');
-        const pumpOffBtn = document.getElementById('pump-off-btn');
 
-        // تحديث الوقت
-        function getCurrentTime() {
+        // إضافة سجل
+        function addLog(message) {
             const now = new Date();
-            return now.toLocaleTimeString('ar-EG', {hour12: false});
-        }
-
-        // إضافة سجل جديد
-        function addLog(message, type = 'info') {
-            const logEntry = document.createElement('div');
-            logEntry.className = `log-entry ${type}`;
-            logEntry.innerHTML = `${message} <span class="log-time">${getCurrentTime()}</span>`;
+            const time = now.getHours().toString().padStart(2, '0') + ':' + 
+                        now.getMinutes().toString().padStart(2, '0');
             
-            logBox.appendChild(logEntry);
+            const log = document.createElement('div');
+            log.className = 'log';
+            log.innerHTML = `${message} <span class="log-time">${time}</span>`;
+            
+            logBox.appendChild(log);
             logBox.scrollTop = logBox.scrollHeight;
             
-            // حفظ فقط آخر 20 سجل
-            const logs = logBox.querySelectorAll('.log-entry');
-            if (logs.length > 20) {
+            // حفظ آخر 15 سجل فقط
+            const logs = logBox.querySelectorAll('.log');
+            if (logs.length > 15) {
                 logs[0].remove();
             }
         }
 
-        // تحديث واجهة المستخدم
+        // تحديث الواجهة
         function updateUI() {
             // تحديث حالة الاتصال
-            connectionText.textContent = appState.connected ? 'متصل' : 'غير متصل';
-            connectionText.className = `status-value ${appState.connected ? 'connected' : 'disconnected'}`;
+            const isConnected = connected;
+            connectionText.textContent = isConnected ? 'متصل' : 'غير متصل';
+            connectionText.className = isConnected ? 'status-value connected' : 'status-value disconnected';
             
-            connectionStatus.textContent = appState.connected ? 'متصل بالسيارة' : 'جاهز للاتصال';
-            connectionDot.className = `connection-dot ${appState.connected ? 'connected' : ''}`;
+            connectionStatusEl.textContent = isConnected ? 'متصل بالسيارة' : 'جاهز للاتصال';
+            connectionDot.className = isConnected ? 'connection-dot connected' : 'connection-dot';
             
+            connectBtn.textContent = isConnected ? 'قطع الاتصال' : 'اتصل بالسيارة';
+            connectBtn.className = isConnected ? 'connect-btn disconnect' : 'connect-btn';
+
             // تحديث حالة الحريق
-            const isFire = appState.flameValue < appState.fireThreshold;
-            appState.fireDetected = isFire;
-            
-            fireStatus.textContent = isFire ? '🔥 حريق' : 'آمن';
-            fireStatus.className = `status-value ${isFire ? 'fire' : 'safe'}`;
-            
+            const hasFire = flameValue < fireThreshold;
+            fireStatus.textContent = hasFire ? '🔥 حريق' : 'آمن';
+            fireStatus.className = hasFire ? 'status-value fire' : 'status-value safe';
+
             // تحديث قراءات الحساس
-            sensorValue.textContent = appState.flameValue;
-            currentValue.textContent = appState.flameValue;
+            flameValueEl.textContent = flameValue;
+            sensorValue.textContent = flameValue;
             
             // تحديث شريط مستوى اللهب
-            const flamePercent = Math.min(100, Math.max(0, (appState.flameValue / 1023) * 100));
+            const flamePercent = Math.min(100, Math.max(0, (flameValue / 1023) * 100));
             flameLevel.style.width = `${flamePercent}%`;
             
-            // تحديث لون شريط اللهب
-            if (appState.flameValue < appState.fireThreshold) {
-                flameLevel.style.background = 'linear-gradient(90deg, #ff0000, #ff5500)';
-            } else if (appState.flameValue < 700) {
-                flameLevel.style.background = 'linear-gradient(90deg, #ff5500, #ffff00)';
+            // تحديث لون الشريط
+            if (hasFire) {
+                flameLevel.style.background = '#f00';
+            } else if (flameValue < 700) {
+                flameLevel.style.background = '#f90';
             } else {
-                flameLevel.style.background = 'linear-gradient(90deg, #ffff00, #00ff00)';
+                flameLevel.style.background = '#0f0';
             }
-            
+
             // تمكين/تعطيل الأزرار
-            const controlBtns = [forwardBtn, backwardBtn, leftBtn, rightBtn, stopBtn, pumpOnBtn, pumpOffBtn];
-            controlBtns.forEach(btn => {
-                btn.disabled = !appState.connected;
+            const btns = [forwardBtn, backwardBtn, leftBtn, rightBtn, stopBtn];
+            btns.forEach(btn => {
+                btn.disabled = !connected;
             });
-            
+
             // تعطيل أزرار الحركة عند وجود حريق
-            if (appState.fireDetected) {
+            if (hasFire) {
                 [forwardBtn, backwardBtn, leftBtn, rightBtn].forEach(btn => {
                     btn.disabled = true;
                 });
             }
-            
-            // إظهار/إخفاء أزرار الاتصال
-            if (appState.connected) {
-                scanBtn.style.display = 'none';
-                disconnectBtn.style.display = 'block';
-            } else {
-                scanBtn.style.display = 'block';
-                disconnectBtn.style.display = 'none';
-            }
         }
 
         // إرسال أمر عبر البلوتوث
-        async function sendBluetoothCommand(command) {
-            if (!appState.connected || !appState.characteristic) {
-                addLog('غير متصل بالسيارة', 'error');
+        async function sendCommand(command) {
+            if (!connected || !characteristic) {
+                addLog('⚠️ غير متصل بالسيارة');
                 return false;
             }
-            
+
             try {
-                // تحويل النص إلى مصفوفة بايتات
                 const encoder = new TextEncoder();
                 const data = encoder.encode(command);
                 
-                // إرسال البيانات
-                await appState.characteristic.writeValue(data);
-                addLog(`تم إرسال الأمر: ${command}`, 'bluetooth');
-                console.log(`📤 Sent to Arduino: ${command}`);
+                await characteristic.writeValue(data);
+                addLog(`📤 تم إرسال: ${command}`);
+                console.log(`Sent: ${command}`);
                 return true;
             } catch (error) {
-                addLog(`خطأ في إرسال الأمر: ${error.message}`, 'error');
-                console.error('Bluetooth send error:', error);
+                addLog(`❌ خطأ في إرسال: ${command}`);
+                console.error('Send error:', error);
                 return false;
             }
         }
 
-        // البحث عن أجهزة بلوتوث - الطريقة المضمونة
-        async function discoverBluetoothDevices() {
+        // البحث والاتصال بالبلوتوث - الإصدار المعدل والمضمون
+        async function connectBluetooth() {
+            if (connected) {
+                await disconnectBluetooth();
+                return;
+            }
+
             try {
-                addLog('🔍 بدأ البحث عن أجهزة البلوتوث...', 'info');
+                addLog('🔍 جاري البحث عن أجهزة بلوتوث...');
                 
-                // التحقق من دعم Web Bluetooth API
+                // التحقق من دعم Web Bluetooth
                 if (!navigator.bluetooth) {
-                    throw new Error('المتصفح لا يدعم Web Bluetooth API. استخدم Chrome على Android أو Edge على Windows 10+');
+                    throw new Error('المتصفح لا يدعم Web Bluetooth API. استخدم Chrome على Android.');
                 }
-                
-                // طريقة 1: البحث بدون فلتر أولاً (الأكثر نجاحاً)
-                const device = await navigator.bluetooth.requestDevice({
-                    // لا نستخدم filters لأنها قد تسبب مشاكل
+
+                // الطريقة المضمونة للبحث عن أجهزة HC-05
+                device = await navigator.bluetooth.requestDevice({
+                    // لا تستخدم filters - دع المستخدم يرى كل الأجهزة
                     acceptAllDevices: true,
-                    optionalServices: ['00001101-0000-1000-8000-00805f9b34fb'] // SPP UUID
+                    // أضف الخدمات الاختيارية التي يحتاجها HC-05
+                    optionalServices: [
+                        '00001101-0000-1000-8000-00805f9b34fb', // Serial Port
+                        '0000ffe0-0000-1000-8000-00805f9b34fb'  // HC-05 Service
+                    ]
                 });
-                
+
                 if (!device) {
-                    addLog('لم يتم اختيار أي جهاز', 'warning');
+                    addLog('❌ لم يتم اختيار جهاز');
                     return;
                 }
-                
-                addLog(`✅ تم العثور على: ${device.name || 'جهاز بلوتوث'}`, 'success');
-                
-                // محاولة الاتصال بالجهاز
-                await connectToBluetoothDevice(device);
-                
-            } catch (error) {
-                console.error('Bluetooth discovery error:', error);
-                
-                if (error.name === 'NotFoundError') {
-                    addLog('❌ لم يتم العثور على أجهزة بلوتوث قريبة', 'error');
-                    addLog('تأكد من: 1) تشغيل البلوتوث على الهاتف 2) تشغيل HC-05 3) أن الجهاز في وضع الاقتران (LED يرمش)', 'warning');
-                } else if (error.name === 'SecurityError') {
-                    addLog('❌ خطأ في الأذونات. يرجى السماح للمتصفح بالوصول إلى البلوتوث', 'error');
-                } else if (error.name === 'NetworkError') {
-                    addLog('❌ خطأ في الشبكة. تأكد من إمكانية الوصول إلى البلوتوث', 'error');
-                } else if (error.message.includes('دعم')) {
-                    addLog('❌ ' + error.message, 'error');
-                    scanBtn.disabled = true;
-                    scanBtn.innerHTML = '❌ غير مدعوم';
-                } else {
-                    addLog(`❌ خطأ: ${error.message}`, 'error');
-                }
-                
-                updateUI();
-            }
-        }
 
-        // الاتصال بجهاز بلوتوث
-        async function connectToBluetoothDevice(device) {
-            try {
-                addLog('🔄 جاري الاتصال بالجهاز...', 'info');
-                
-                // إضافة مستمع لفقدان الاتصال
-                device.addEventListener('gattserverdisconnected', () => {
-                    addLog('⚠️ فقدان الاتصال بالجهاز', 'error');
-                    appState.connected = false;
-                    appState.device = null;
-                    appState.characteristic = null;
-                    updateUI();
-                });
-                
-                // الاتصال بخادم GATT
+                addLog(`✅ تم العثور على: ${device.name || 'جهاز بلوتوث'}`);
+
+                // الاتصال بالجهاز
                 const server = await device.gatt.connect();
-                appState.server = server;
                 
-                // الحصول على الخدمة التسلسلية (الخدمة القياسية للـ HC-05)
-                // نستخدم عدة UUIDs شائعة للتوافق
-                const serviceUUIDs = [
-                    '00001101-0000-1000-8000-00805f9b34fb', // SPP
-                    '00001101-0000-1000-8000-00805f9b34fa', // SPP alternative
-                    '0000ffe0-0000-1000-8000-00805f9b34fb'  // Common for HC-05
-                ];
-                
+                // تجربة خدمات مختلفة للـ HC-05
                 let service = null;
-                for (const uuid of serviceUUIDs) {
+                let serviceUUIDs = [
+                    '00001101-0000-1000-8000-00805f9b34fb',
+                    '0000ffe0-0000-1000-8000-00805f9b34fb',
+                    '00001101-0000-1000-8000-00805f9b34fa'
+                ];
+
+                for (let uuid of serviceUUIDs) {
                     try {
                         service = await server.getPrimaryService(uuid);
                         console.log(`✅ Connected to service: ${uuid}`);
                         break;
                     } catch (e) {
-                        console.log(`❌ Failed to get service ${uuid}:`, e.message);
+                        console.log(`❌ Failed service ${uuid}:`, e.message);
                     }
                 }
-                
+
                 if (!service) {
-                    throw new Error('لم يتم العثور على الخدمة المناسبة');
+                    throw new Error('لم يتم العثور على خدمة مناسبة');
                 }
-                
-                // الحصول على خاصية الكتابة
-                const characteristicUUIDs = [
+
+                // تجربة خصائص مختلفة
+                let characteristicUUIDs = [
                     '00001101-0000-1000-8000-00805f9b34fb',
                     '0000ffe1-0000-1000-8000-00805f9b34fb'
                 ];
-                
-                for (const uuid of characteristicUUIDs) {
+
+                for (let uuid of characteristicUUIDs) {
                     try {
-                        appState.characteristic = await service.getCharacteristic(uuid);
+                        characteristic = await service.getCharacteristic(uuid);
                         console.log(`✅ Got characteristic: ${uuid}`);
                         break;
                     } catch (e) {
-                        console.log(`❌ Failed to get characteristic ${uuid}:`, e.message);
+                        console.log(`❌ Failed characteristic ${uuid}:`, e.message);
                     }
                 }
-                
-                if (!appState.characteristic) {
-                    throw new Error('لم يتم العثور على خاصية الكتابة');
+
+                if (!characteristic) {
+                    throw new Error('لم يتم العثور على خاصية مناسبة');
                 }
-                
+
+                // إضافة مستمع لفقدان الاتصال
+                device.addEventListener('gattserverdisconnected', () => {
+                    addLog('⚠️ فقدان الاتصال بالجهاز');
+                    connected = false;
+                    device = null;
+                    characteristic = null;
+                    updateUI();
+                });
+
                 // الاتصال الناجح
-                appState.connected = true;
-                appState.device = device;
-                addLog('🎉 تم الاتصال بالسيارة بنجاح!', 'success');
+                connected = true;
+                addLog('🎉 تم الاتصال بالسيارة بنجاح!');
                 
                 // إرسال أمر توقف أولي
-                await sendBluetoothCommand('S');
+                await sendCommand('S');
                 
                 updateUI();
-                
+
             } catch (error) {
-                console.error('Connection error:', error);
-                addLog(`❌ فشل الاتصال: ${error.message}`, 'error');
-                appState.connected = false;
+                console.error('Bluetooth error:', error);
+                
+                if (error.name === 'NotFoundError') {
+                    addLog('❌ لم يتم العثور على أجهزة بلوتوث');
+                    addLog('💡 تأكد من: 1) تشغيل البلوتوث 2) تشغيل HC-05 3) أن الجهاز في وضع الاقتران');
+                } else if (error.name === 'SecurityError') {
+                    addLog('❌ خطأ في أذونات البلوتوث');
+                } else if (error.message.includes('دعم')) {
+                    addLog('❌ ' + error.message);
+                    connectBtn.disabled = true;
+                    connectBtn.textContent = 'غير مدعوم';
+                } else {
+                    addLog(`❌ خطأ: ${error.message}`);
+                }
+                
                 updateUI();
             }
         }
@@ -889,100 +587,65 @@
         // قطع الاتصال
         async function disconnectBluetooth() {
             try {
-                if (appState.device && appState.device.gatt.connected) {
-                    // إرسال أمر توقف أولاً
-                    await sendBluetoothCommand('S');
-                    appState.device.gatt.disconnect();
+                if (device && device.gatt.connected) {
+                    // إرسال أمر توقف قبل قطع الاتصال
+                    await sendCommand('S');
+                    device.gatt.disconnect();
                 }
             } catch (error) {
                 console.error('Disconnect error:', error);
             } finally {
-                appState.connected = false;
-                appState.device = null;
-                appState.characteristic = null;
-                appState.server = null;
-                addLog('تم قطع الاتصال', 'info');
+                connected = false;
+                device = null;
+                characteristic = null;
+                addLog('تم قطع الاتصال');
                 updateUI();
             }
         }
 
-        // محاكاة بيانات الحساس
-        function simulateSensorData() {
-            if (!appState.connected) return;
+        // محاكاة قراءة الحساس
+        function simulateSensor() {
+            if (!connected) return;
             
-            // تغييرات عشوائية في قراءة الحساس
-            const change = (Math.random() - 0.5) * 60;
-            appState.flameValue = Math.max(0, Math.min(1023, appState.flameValue + change));
+            // تغيير قيمة الحساس عشوائياً
+            const change = (Math.random() - 0.5) * 50;
+            flameValue = Math.max(0, Math.min(1023, flameValue + change));
             
-            // محاكاة اكتشاف حريق (10% فرصة)
-            if (Math.random() < 0.1 && !appState.fireDetected) {
-                appState.flameValue = Math.floor(Math.random() * 400);
-                addLog('🔥 تم اكتشاف حريق! السيارة تتوقف تلقائياً', 'warning');
+            // محاكاة حريق عشوائي (7% فرصة)
+            if (Math.random() < 0.07 && flameValue > 500) {
+                flameValue = Math.floor(Math.random() * 400);
+                addLog('🔥 تم اكتشاف حريق! السيارة تتوقف');
                 
                 // إرسال أمر توقف تلقائياً
-                sendBluetoothCommand('S');
+                sendCommand('S');
                 
-                // إعادة تعيين القيمة بعد 8 ثواني
+                // إعادة تعيين بعد 7 ثواني
                 setTimeout(() => {
-                    if (appState.flameValue < 500) {
-                        appState.flameValue = 800 + Math.floor(Math.random() * 200);
+                    if (flameValue < 500) {
+                        flameValue = 800 + Math.floor(Math.random() * 200);
+                        updateUI();
                     }
-                }, 8000);
+                }, 7000);
             }
             
             updateUI();
         }
 
-        // إعداد معالج الأحداث
-        function setupEventListeners() {
-            // زر البحث عن أجهزة
-            scanBtn.addEventListener('click', discoverBluetoothDevices);
-            
-            // زر قطع الاتصال
-            disconnectBtn.addEventListener('click', disconnectBluetooth);
-            
+        // إعداد الأحداث
+        function setupEvents() {
+            // زر الاتصال
+            connectBtn.addEventListener('click', connectBluetooth);
+
             // أزرار التحكم
-            forwardBtn.addEventListener('click', async () => {
-                if (!appState.connected || appState.fireDetected) return;
-                await sendBluetoothCommand('F');
-            });
-            
-            backwardBtn.addEventListener('click', async () => {
-                if (!appState.connected || appState.fireDetected) return;
-                await sendBluetoothCommand('B');
-            });
-            
-            leftBtn.addEventListener('click', async () => {
-                if (!appState.connected || appState.fireDetected) return;
-                await sendBluetoothCommand('L');
-            });
-            
-            rightBtn.addEventListener('click', async () => {
-                if (!appState.connected || appState.fireDetected) return;
-                await sendBluetoothCommand('R');
-            });
-            
-            stopBtn.addEventListener('click', async () => {
-                if (!appState.connected) return;
-                await sendBluetoothCommand('S');
-            });
-            
-            // أزرار المضخة
-            pumpOnBtn.addEventListener('click', async () => {
-                if (!appState.connected) return;
-                // في نظامك، المضخة تشتغل تلقائياً عند وجود حريق
-                // ولكن يمكننا إرسال أمر خاص إذا أردت
-                addLog('المضخة تعمل تلقائياً عند اكتشاف حريق', 'info');
-            });
-            
-            pumpOffBtn.addEventListener('click', async () => {
-                if (!appState.connected) return;
-                addLog('المضخة تتوقف عند انتهاء الحريق', 'info');
-            });
-            
+            forwardBtn.addEventListener('click', () => sendCommand('F'));
+            backwardBtn.addEventListener('click', () => sendCommand('B'));
+            leftBtn.addEventListener('click', () => sendCommand('L'));
+            rightBtn.addEventListener('click', () => sendCommand('R'));
+            stopBtn.addEventListener('click', () => sendCommand('S'));
+
             // اختصارات لوحة المفاتيح
-            document.addEventListener('keydown', async (e) => {
-                if (!appState.connected || appState.fireDetected) return;
+            document.addEventListener('keydown', (e) => {
+                if (!connected) return;
                 
                 switch(e.key.toLowerCase()) {
                     case 'arrowup':
@@ -1002,34 +665,32 @@
                         rightBtn.click();
                         break;
                     case ' ':
-                    case 'x':
                         stopBtn.click();
                         break;
                 }
             });
         }
 
-        // تهيئة التطبيق
+        // بدء التطبيق
         function init() {
-            addLog('🚀 نظام التحكم في السيارة الذكية', 'success');
-            addLog('📱 اضغط "بحث عن أجهزة" للاتصال', 'info');
+            addLog('🚀 نظام التحكم جاهز للعمل');
+            addLog('📱 اضغط "اتصل بالسيارة" للبدء');
             
-            setupEventListeners();
+            setupEvents();
             updateUI();
             
-            // محاكاة بيانات الحساس كل 2 ثانية
-            setInterval(simulateSensorData, 2000);
+            // محاكاة الحساس كل 2 ثانية
+            setInterval(simulateSensor, 2000);
             
             // التحقق من دعم البلوتوث
             if (!navigator.bluetooth) {
-                addLog('❌ هذا المتصفح لا يدعم Web Bluetooth API', 'error');
-                addLog('💡 استخدم Chrome على Android أو Edge على Windows 10+', 'warning');
-                scanBtn.disabled = true;
-                scanBtn.innerHTML = '❌ غير مدعوم';
+                addLog('⚠️ استخدم Chrome على Android للاتصال');
+                connectBtn.disabled = true;
+                connectBtn.textContent = 'غير مدعوم';
             }
         }
 
-        // بدء التشغيل
+        // تشغيل التطبيق
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
