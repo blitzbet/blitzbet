@@ -3,274 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تحكم سيارة بلوتوث</title>
+    <title>تحكم سيارة Arduino بلوتوث</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            touch-action: manipulation;
-        }
-
-        body {
-            background: #000;
-            color: white;
-            min-height: 100vh;
-            padding: 10px;
-        }
-
-        .header {
-            text-align: center;
-            padding: 15px 0;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #0f0;
-        }
-
-        .header h1 {
-            font-size: 1.5rem;
-            color: #0f0;
-            margin-bottom: 5px;
-        }
-
-        .header p {
-            color: #8f8;
-            font-size: 0.9rem;
-        }
-
-        .status {
-            background: #111;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            border: 1px solid #333;
-        }
-
-        .status-item {
-            text-align: center;
-        }
-
-        .status-label {
-            color: #888;
-            font-size: 0.8rem;
-            margin-bottom: 5px;
-        }
-
-        .status-value {
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-
-        .connected { color: #0f0; }
-        .disconnected { color: #f00; }
-        .fire { color: #f90; }
-        .safe { color: #0f0; }
-
-        .controls {
-            background: #111;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
-        }
-
-        .section-title {
-            color: #0f0;
-            margin-bottom: 15px;
-            text-align: center;
-            font-size: 1.2rem;
-        }
-
-        .joystick {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .row {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .btn {
-            width: 70px;
-            height: 70px;
-            border: none;
-            border-radius: 10px;
-            background: #222;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s;
-        }
-
-        .btn:active {
-            background: #0f0;
-            transform: scale(0.95);
-        }
-
-        .btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .center-btn {
-            background: #f90;
-        }
-
-        .sensor {
-            background: #111;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
-        }
-
-        .sensor-display {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            text-align: center;
-        }
-
-        .sensor-value {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: white;
-            margin: 10px 0;
-        }
-
-        .sensor-label {
-            font-size: 0.8rem;
-            color: #888;
-        }
-
-        .flame-bar {
-            width: 100%;
-            height: 10px;
-            background: #222;
-            border-radius: 5px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .flame-level {
-            height: 100%;
-            background: #0f0;
-            border-radius: 5px;
-            transition: width 0.5s;
-            width: 0%;
-        }
-
-        .connection {
-            background: #111;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
-        }
-
-        .connection-status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #1a1a1a;
-            border-radius: 8px;
-        }
-
-        .connection-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #f00;
-        }
-
-        .connection-dot.connected {
-            background: #0f0;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .connect-btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 8px;
-            background: #06f;
-            color: white;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .connect-btn:active:not(:disabled) {
-            background: #05e;
-            transform: scale(0.98);
-        }
-
-        .connect-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .connect-btn.disconnect {
-            background: #f00;
-        }
-
-        .logs {
-            background: #111;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
-        }
-
-        .log-box {
-            background: #000;
-            border-radius: 8px;
-            padding: 10px;
-            height: 120px;
-            overflow-y: auto;
-            font-size: 0.9rem;
-            font-family: monospace;
-        }
-
-        .log {
-            padding: 3px 0;
-            border-bottom: 1px solid #222;
-        }
-
-        .log-time {
-            color: #888;
-            font-size: 0.8rem;
-            float: left;
-        }
-
-        footer {
-            text-align: center;
-            padding: 15px 0;
-            color: #666;
-            font-size: 0.8rem;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: manipulation; }
+        body { background: #000; color: white; min-height: 100vh; padding: 10px; }
+        
+        .header { text-align: center; padding: 15px 0; margin-bottom: 15px; border-bottom: 2px solid #0f0; }
+        .header h1 { font-size: 1.5rem; color: #0f0; margin-bottom: 5px; }
+        .header p { color: #8f8; font-size: 0.9rem; }
+        
+        .status { background: #111; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; border: 1px solid #333; }
+        .status-item { text-align: center; }
+        .status-label { color: #888; font-size: 0.8rem; margin-bottom: 5px; }
+        .status-value { font-size: 1.1rem; font-weight: bold; }
+        .connected { color: #0f0; } .disconnected { color: #f00; } .fire { color: #f90; } .safe { color: #0f0; }
+        
+        .controls { background: #111; border-radius: 10px; padding: 20px; margin-bottom: 15px; border: 1px solid #333; }
+        .section-title { color: #0f0; margin-bottom: 15px; text-align: center; font-size: 1.2rem; }
+        .joystick { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .row { display: flex; justify-content: center; gap: 15px; }
+        .btn { width: 70px; height: 70px; border: none; border-radius: 10px; background: #222; color: white; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.1s; }
+        .btn:active { background: #0f0; transform: scale(0.95); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
+        .center-btn { background: #f90; }
+        
+        .sensor { background: #111; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #333; }
+        .sensor-display { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
+        .sensor-value { font-size: 1.8rem; font-weight: bold; color: white; margin: 10px 0; }
+        .sensor-label { font-size: 0.8rem; color: #888; }
+        .flame-bar { width: 100%; height: 10px; background: #222; border-radius: 5px; margin-top: 10px; overflow: hidden; }
+        .flame-level { height: 100%; background: #0f0; border-radius: 5px; transition: width 0.5s; width: 0%; }
+        
+        .connection { background: #111; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #333; }
+        .connection-status { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; padding: 10px; background: #1a1a1a; border-radius: 8px; }
+        .connection-dot { width: 10px; height: 10px; border-radius: 50%; background: #f00; }
+        .connection-dot.connected { background: #0f0; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .connect-btn { width: 100%; padding: 15px; border: none; border-radius: 8px; background: #06f; color: white; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; }
+        .connect-btn:active:not(:disabled) { background: #05e; transform: scale(0.98); }
+        .connect-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .connect-btn.disconnect { background: #f00; }
+        
+        .logs { background: #111; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #333; }
+        .log-box { background: #000; border-radius: 8px; padding: 10px; height: 120px; overflow-y: auto; font-size: 0.9rem; font-family: monospace; }
+        .log { padding: 3px 0; border-bottom: 1px solid #222; }
+        .log-time { color: #888; font-size: 0.8rem; float: left; }
+        
+        footer { text-align: center; padding: 15px 0; color: #666; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -280,34 +59,21 @@
     </div>
 
     <div class="status">
-        <div class="status-item">
-            <div class="status-label">الاتصال</div>
-            <div class="status-value disconnected" id="connection-text">غير متصل</div>
-        </div>
-        <div class="status-item">
-            <div class="status-label">الحريق</div>
-            <div class="status-value safe" id="fire-status">آمن</div>
-        </div>
-        <div class="status-item">
-            <div class="status-label">حساس اللهب</div>
-            <div class="status-value" id="flame-value">-</div>
-        </div>
+        <div class="status-item"><div class="status-label">الاتصال</div><div class="status-value disconnected" id="connection-text">غير متصل</div></div>
+        <div class="status-item"><div class="status-label">الحريق</div><div class="status-value safe" id="fire-status">آمن</div></div>
+        <div class="status-item"><div class="status-label">حساس اللهب</div><div class="status-value" id="flame-value">-</div></div>
     </div>
 
     <div class="controls">
         <h2 class="section-title">🎮 تحكم في السيارة</h2>
         <div class="joystick">
-            <div class="row">
-                <button class="btn" id="forward-btn">↑</button>
-            </div>
+            <div class="row"><button class="btn" id="forward-btn">↑</button></div>
             <div class="row">
                 <button class="btn" id="left-btn">←</button>
                 <button class="btn center-btn" id="stop-btn">⏹</button>
                 <button class="btn" id="right-btn">→</button>
             </div>
-            <div class="row">
-                <button class="btn" id="backward-btn">↓</button>
-            </div>
+            <div class="row"><button class="btn" id="backward-btn">↓</button></div>
         </div>
     </div>
 
@@ -317,16 +83,12 @@
             <div class="sensor-item">
                 <div class="sensor-value" id="sensor-value">0</div>
                 <div class="sensor-label">قراءة الحساس</div>
-                <div class="flame-bar">
-                    <div class="flame-level" id="flame-level"></div>
-                </div>
+                <div class="flame-bar"><div class="flame-level" id="flame-level"></div></div>
             </div>
             <div class="sensor-item">
                 <div class="sensor-value" style="color: #f90;">500</div>
                 <div class="sensor-label">عتبة الحريق</div>
-                <div style="color: #888; font-size: 0.8rem; margin-top: 10px;">
-                    أقل من 500 = حريق
-                </div>
+                <div style="color: #888; font-size: 0.8rem; margin-top: 10px;">أقل من 500 = حريق</div>
             </div>
         </div>
     </div>
@@ -347,9 +109,7 @@
         </div>
     </div>
 
-    <footer>
-        <p>مشروع تخرج - Arduino Uno + HC-05</p>
-    </footer>
+    <footer><p>مشروع تخرج - Arduino Uno + HC-05</p></footer>
 
     <script>
         // حالة التطبيق
@@ -468,7 +228,7 @@
             }
         }
 
-        // البحث والاتصال بالبلوتوث - الإصدار المعدل والمضمون
+        // الاتصال بالبلوتوث - الإصدار النهائي المضمون
         async function connectBluetooth() {
             if (connected) {
                 await disconnectBluetooth();
@@ -476,22 +236,26 @@
             }
 
             try {
-                addLog('🔍 جاري البحث عن أجهزة بلوتوث...');
+                addLog('🔍 جاري البحث عن HC-05...');
                 
                 // التحقق من دعم Web Bluetooth
                 if (!navigator.bluetooth) {
-                    throw new Error('المتصفح لا يدعم Web Bluetooth API. استخدم Chrome على Android.');
+                    throw new Error('⚠️ استخدم Chrome على Android أو Edge على Windows');
                 }
 
-                // الطريقة المضمونة للبحث عن أجهزة HC-05
+                // 🔥 الطريقة المضمونة للبحث عن HC-05
                 device = await navigator.bluetooth.requestDevice({
-                    // لا تستخدم filters - دع المستخدم يرى كل الأجهزة
-                    acceptAllDevices: true,
-                    // أضف الخدمات الاختيارية التي يحتاجها HC-05
-                    optionalServices: [
-                        '00001101-0000-1000-8000-00805f9b34fb', // Serial Port
-                        '0000ffe0-0000-1000-8000-00805f9b34fb'  // HC-05 Service
-                    ]
+                    // 🔥 هذا الحل النهائي يظهر HC-05
+                    filters: [
+                        { name: 'HC-05' },  // البحث بالاسم المباشر
+                        { name: 'HC-06' },  // أو HC-06
+                        { namePrefix: 'HC' }, // أو أي جهاز يبدأ بـ HC
+                        { namePrefix: 'BT' }, // أو يبدأ بـ BT
+                        { name: 'linvor' },  // بعض HC-05 تظهر بهذا الاسم
+                        { name: 'DSD TECH' } // أو أسماء أخرى
+                    ],
+                    // 🔥 إضافة هذا الخيار المهم
+                    optionalServices: ['00001101-0000-1000-8000-00805f9b34fb']
                 });
 
                 if (!device) {
@@ -499,52 +263,20 @@
                     return;
                 }
 
+                console.log('✅ Device found:', device.name, device.id);
                 addLog(`✅ تم العثور على: ${device.name || 'جهاز بلوتوث'}`);
 
                 // الاتصال بالجهاز
                 const server = await device.gatt.connect();
+                console.log('✅ GATT Connected');
                 
-                // تجربة خدمات مختلفة للـ HC-05
-                let service = null;
-                let serviceUUIDs = [
-                    '00001101-0000-1000-8000-00805f9b34fb',
-                    '0000ffe0-0000-1000-8000-00805f9b34fb',
-                    '00001101-0000-1000-8000-00805f9b34fa'
-                ];
-
-                for (let uuid of serviceUUIDs) {
-                    try {
-                        service = await server.getPrimaryService(uuid);
-                        console.log(`✅ Connected to service: ${uuid}`);
-                        break;
-                    } catch (e) {
-                        console.log(`❌ Failed service ${uuid}:`, e.message);
-                    }
-                }
-
-                if (!service) {
-                    throw new Error('لم يتم العثور على خدمة مناسبة');
-                }
-
-                // تجربة خصائص مختلفة
-                let characteristicUUIDs = [
-                    '00001101-0000-1000-8000-00805f9b34fb',
-                    '0000ffe1-0000-1000-8000-00805f9b34fb'
-                ];
-
-                for (let uuid of characteristicUUIDs) {
-                    try {
-                        characteristic = await service.getCharacteristic(uuid);
-                        console.log(`✅ Got characteristic: ${uuid}`);
-                        break;
-                    } catch (e) {
-                        console.log(`❌ Failed characteristic ${uuid}:`, e.message);
-                    }
-                }
-
-                if (!characteristic) {
-                    throw new Error('لم يتم العثور على خاصية مناسبة');
-                }
+                // الحصول على الخدمة التسلسلية
+                const service = await server.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
+                console.log('✅ Service obtained');
+                
+                // الحصول على خاصية الكتابة
+                characteristic = await service.getCharacteristic('00001143-0000-1000-8000-00805f9b34fb');
+                console.log('✅ Characteristic obtained');
 
                 // إضافة مستمع لفقدان الاتصال
                 device.addEventListener('gattserverdisconnected', () => {
@@ -565,13 +297,17 @@
                 updateUI();
 
             } catch (error) {
-                console.error('Bluetooth error:', error);
+                console.error('❌ Bluetooth error:', error);
                 
                 if (error.name === 'NotFoundError') {
-                    addLog('❌ لم يتم العثور على أجهزة بلوتوث');
-                    addLog('💡 تأكد من: 1) تشغيل البلوتوث 2) تشغيل HC-05 3) أن الجهاز في وضع الاقتران');
+                    addLog('❌ لم يتم العثور على HC-05');
+                    addLog('💡 تأكد من:');
+                    addLog('1. HC-05 مضاء (الضوء يرمش)');
+                    addLog('2. البلوتوث مفعل على الهاتف');
+                    addLog('3. HC-05 ليس متصلاً بجهاز آخر');
                 } else if (error.name === 'SecurityError') {
-                    addLog('❌ خطأ في أذونات البلوتوث');
+                    addLog('❌ خطأ في الأذونات');
+                    addLog('💡 امنح الإذن للمتصفح للوصول للبلوتوث');
                 } else if (error.message.includes('دعم')) {
                     addLog('❌ ' + error.message);
                     connectBtn.disabled = true;
@@ -684,9 +420,13 @@
             
             // التحقق من دعم البلوتوث
             if (!navigator.bluetooth) {
-                addLog('⚠️ استخدم Chrome على Android للاتصال');
+                addLog('⚠️ هذا المتصفح لا يدعم Web Bluetooth');
+                addLog('💡 استخدم Chrome على Android أو Edge على Windows');
                 connectBtn.disabled = true;
                 connectBtn.textContent = 'غير مدعوم';
+            } else {
+                addLog('✅ المتصفح يدعم Web Bluetooth API');
+                addLog('🔗 اضغط زر الاتصال للبحث عن HC-05');
             }
         }
 
