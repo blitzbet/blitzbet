@@ -44,12 +44,21 @@
         .connect-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         .connect-btn.disconnect { background: #f00; }
         
+        .device-list { margin: 10px 0; max-height: 150px; overflow-y: auto; background: #1a1a1a; border-radius: 8px; padding: 10px; border: 1px solid #333; }
+        .device-item { padding: 10px; margin: 5px 0; background: #222; border-radius: 5px; cursor: pointer; transition: all 0.2s; border: 1px solid #333; }
+        .device-item:hover { background: #333; border-color: #0f0; }
+        .device-name { font-weight: bold; color: #0f0; }
+        .device-id { font-size: 0.8rem; color: #888; font-family: monospace; }
+        
         .logs { background: #111; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #333; }
         .log-box { background: #000; border-radius: 8px; padding: 10px; height: 120px; overflow-y: auto; font-size: 0.9rem; font-family: monospace; }
         .log { padding: 3px 0; border-bottom: 1px solid #222; }
         .log-time { color: #888; font-size: 0.8rem; float: left; }
         
         footer { text-align: center; padding: 15px 0; color: #666; font-size: 0.8rem; }
+        
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -99,13 +108,21 @@
             <div class="connection-dot" id="connection-dot"></div>
             <span id="connection-status">جاهز للاتصال</span>
         </div>
-        <button class="connect-btn" id="connect-btn">اتصل بالسيارة</button>
+        
+        <div class="device-list" id="device-list">
+            <div class="device-item" style="text-align: center; color: #888;">
+                اضغط "بحث عن أجهزة" لعرض القائمة
+            </div>
+        </div>
+        
+        <button class="connect-btn" id="connect-btn">🔍 بحث عن أجهزة بلوتوث</button>
+        <button class="connect-btn disconnect" id="disconnect-btn" style="display: none; margin-top: 10px;">❌ قطع الاتصال</button>
     </div>
 
     <div class="logs">
         <h2 class="section-title">📝 سجل الأحداث</h2>
         <div class="log-box" id="log-box">
-            <div class="log">🚀 جاهز للاتصال <span class="log-time">10:30</span></div>
+            <div class="log">🚀 نظام التحكم جاهز للعمل <span class="log-time">10:30</span></div>
         </div>
     </div>
 
@@ -118,6 +135,7 @@
         let characteristic = null;
         let flameValue = 0;
         let fireThreshold = 500;
+        let discoveredDevices = [];
 
         // عناصر DOM
         const connectionText = document.getElementById('connection-text');
@@ -128,6 +146,8 @@
         const connectionDot = document.getElementById('connection-dot');
         const connectionStatusEl = document.getElementById('connection-status');
         const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const deviceList = document.getElementById('device-list');
         const logBox = document.getElementById('log-box');
         
         // أزرار التحكم
@@ -138,7 +158,7 @@
         const stopBtn = document.getElementById('stop-btn');
 
         // إضافة سجل
-        function addLog(message) {
+        function addLog(message, type = 'info') {
             const now = new Date();
             const time = now.getHours().toString().padStart(2, '0') + ':' + 
                         now.getMinutes().toString().padStart(2, '0');
@@ -147,12 +167,16 @@
             log.className = 'log';
             log.innerHTML = `${message} <span class="log-time">${time}</span>`;
             
+            if (type === 'error') log.style.color = '#f00';
+            else if (type === 'success') log.style.color = '#0f0';
+            else if (type === 'warning') log.style.color = '#f90';
+            
             logBox.appendChild(log);
             logBox.scrollTop = logBox.scrollHeight;
             
-            // حفظ آخر 15 سجل فقط
+            // حفظ آخر 20 سجل فقط
             const logs = logBox.querySelectorAll('.log');
-            if (logs.length > 15) {
+            if (logs.length > 20) {
                 logs[0].remove();
             }
         }
@@ -167,8 +191,8 @@
             connectionStatusEl.textContent = isConnected ? 'متصل بالسيارة' : 'جاهز للاتصال';
             connectionDot.className = isConnected ? 'connection-dot connected' : 'connection-dot';
             
-            connectBtn.textContent = isConnected ? 'قطع الاتصال' : 'اتصل بالسيارة';
-            connectBtn.className = isConnected ? 'connect-btn disconnect' : 'connect-btn';
+            connectBtn.style.display = isConnected ? 'none' : 'block';
+            disconnectBtn.style.display = isConnected ? 'block' : 'none';
 
             // تحديث حالة الحريق
             const hasFire = flameValue < fireThreshold;
@@ -206,10 +230,43 @@
             }
         }
 
+        // عرض قائمة الأجهزة
+        function updateDeviceList(devices) {
+            deviceList.innerHTML = '';
+            
+            if (devices.length === 0) {
+                const emptyItem = document.createElement('div');
+                emptyItem.className = 'device-item';
+                emptyItem.style.textAlign = 'center';
+                emptyItem.style.color = '#888';
+                emptyItem.textContent = 'لم يتم العثور على أجهزة';
+                deviceList.appendChild(emptyItem);
+                return;
+            }
+            
+            devices.forEach((device, index) => {
+                const deviceItem = document.createElement('div');
+                deviceItem.className = 'device-item';
+                deviceItem.onclick = () => connectToDevice(device);
+                
+                const deviceName = document.createElement('div');
+                deviceName.className = 'device-name';
+                deviceName.textContent = device.name || `جهاز بلوتوث ${index + 1}`;
+                
+                const deviceId = document.createElement('div');
+                deviceId.className = 'device-id';
+                deviceId.textContent = device.id || 'معرف غير متاح';
+                
+                deviceItem.appendChild(deviceName);
+                deviceItem.appendChild(deviceId);
+                deviceList.appendChild(deviceItem);
+            });
+        }
+
         // إرسال أمر عبر البلوتوث
         async function sendCommand(command) {
             if (!connected || !characteristic) {
-                addLog('⚠️ غير متصل بالسيارة');
+                addLog('⚠️ غير متصل بالسيارة', 'warning');
                 return false;
             }
 
@@ -218,104 +275,171 @@
                 const data = encoder.encode(command);
                 
                 await characteristic.writeValue(data);
-                addLog(`📤 تم إرسال: ${command}`);
-                console.log(`Sent: ${command}`);
+                addLog(`📤 تم إرسال: ${command}`, 'success');
+                console.log(`Sent to Arduino: ${command}`);
                 return true;
             } catch (error) {
-                addLog(`❌ خطأ في إرسال: ${command}`);
+                addLog(`❌ خطأ في إرسال: ${command}`, 'error');
                 console.error('Send error:', error);
                 return false;
             }
         }
 
-        // الاتصال بالبلوتوث - الإصدار النهائي المضمون
-        async function connectBluetooth() {
-            if (connected) {
-                await disconnectBluetooth();
-                return;
-            }
-
+        // 🔥 البحث عن جميع أجهزة البلوتوث - الطريقة المضمونة
+        async function discoverBluetoothDevices() {
             try {
-                addLog('🔍 جاري البحث عن HC-05...');
+                addLog('🔍 بدأ البحث عن أجهزة البلوتوث...', 'info');
+                connectBtn.disabled = true;
+                connectBtn.innerHTML = '🔎 جاري البحث...';
+                connectBtn.classList.add('blink');
                 
-                // التحقق من دعم Web Bluetooth
+                // التحقق من دعم Web Bluetooth API
                 if (!navigator.bluetooth) {
-                    throw new Error('⚠️ استخدم Chrome على Android أو Edge على Windows');
+                    throw new Error('المتصفح لا يدعم Web Bluetooth API');
                 }
 
-                // 🔥 الطريقة المضمونة للبحث عن HC-05
-                device = await navigator.bluetooth.requestDevice({
-                    // 🔥 هذا الحل النهائي يظهر HC-05
-                    filters: [
-                        { name: 'HC-05' },  // البحث بالاسم المباشر
-                        { name: 'HC-06' },  // أو HC-06
-                        { namePrefix: 'HC' }, // أو أي جهاز يبدأ بـ HC
-                        { namePrefix: 'BT' }, // أو يبدأ بـ BT
-                        { name: 'linvor' },  // بعض HC-05 تظهر بهذا الاسم
-                        { name: 'DSD TECH' } // أو أسماء أخرى
-                    ],
-                    // 🔥 إضافة هذا الخيار المهم
-                    optionalServices: ['00001101-0000-1000-8000-00805f9b34fb']
+                // 🔥 الطريقة الأفضل: استخدام acceptAllDevices مع optionalServices
+                // هذا يضمن ظهور جميع الأجهزة
+                const selectedDevice = await navigator.bluetooth.requestDevice({
+                    // ⚡ هذا الخيار يظهر جميع الأجهزة بدون استثناء
+                    acceptAllDevices: true,
+                    
+                    // ⚡ إضافة جميع الخدمات الممكنة للتوافق
+                    optionalServices: [
+                        '00001101-0000-1000-8000-00805f9b34fb', // SPP Standard
+                        '00001101-0000-1000-8000-00805f9b34fa', // SPP Alternative
+                        '0000ffe0-0000-1000-8000-00805f9b34fb', // HC-05 Common
+                        '0000ffe1-0000-1000-8000-00805f9b34fb', // HC-05 Characteristic
+                        '0000ffe2-0000-1000-8000-00805f9b34fb', // HC-05 Alternative
+                        '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Some Bluetooth modules
+                        '6e400001-b5a3-f393-e0a9-e50e24dcca9e'  // Nordic UART
+                    ]
                 });
 
-                if (!device) {
-                    addLog('❌ لم يتم اختيار جهاز');
+                if (!selectedDevice) {
+                    addLog('❌ لم يتم اختيار جهاز', 'warning');
                     return;
                 }
 
-                console.log('✅ Device found:', device.name, device.id);
-                addLog(`✅ تم العثور على: ${device.name || 'جهاز بلوتوث'}`);
-
-                // الاتصال بالجهاز
-                const server = await device.gatt.connect();
-                console.log('✅ GATT Connected');
+                console.log('✅ Device selected:', selectedDevice);
+                addLog(`✅ تم اختيار: ${selectedDevice.name || 'جهاز بلوتوث'}`, 'success');
                 
-                // الحصول على الخدمة التسلسلية
-                const service = await server.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
-                console.log('✅ Service obtained');
+                // محاولة الاتصال بالجهاز المختار
+                await connectToSelectedDevice(selectedDevice);
                 
-                // الحصول على خاصية الكتابة
-                characteristic = await service.getCharacteristic('00001143-0000-1000-8000-00805f9b34fb');
-                console.log('✅ Characteristic obtained');
+            } catch (error) {
+                console.error('❌ Bluetooth discovery error:', error);
+                
+                if (error.name === 'NotFoundError') {
+                    addLog('❌ لم يتم العثور على أجهزة بلوتوث', 'error');
+                    addLog('💡 تأكد من تشغيل البلوتوث على الهاتف', 'info');
+                    addLog('💡 تأكد من أن HC-05 في وضع الاقتران (ضوء يرمش)', 'info');
+                } else if (error.name === 'SecurityError') {
+                    addLog('❌ خطأ في أذونات البلوتوث', 'error');
+                    addLog('💡 امنح الإذن للمتصفح للوصول إلى البلوتوث', 'info');
+                } else if (error.name === 'AbortError') {
+                    addLog('❌ تم إلغاء عملية البحث', 'warning');
+                } else if (error.message.includes('دعم')) {
+                    addLog('❌ ' + error.message, 'error');
+                    addLog('💡 استخدم Chrome على Android أو Edge على Windows', 'info');
+                    connectBtn.disabled = true;
+                    connectBtn.textContent = '❌ غير مدعوم';
+                } else {
+                    addLog(`❌ خطأ: ${error.message}`, 'error');
+                }
+                
+            } finally {
+                connectBtn.disabled = false;
+                connectBtn.innerHTML = '🔍 بحث عن أجهزة بلوتوث';
+                connectBtn.classList.remove('blink');
+                updateUI();
+            }
+        }
 
+        // الاتصال بالجهاز المختار
+        async function connectToSelectedDevice(selectedDevice) {
+            try {
+                addLog('🔄 جاري الاتصال بالجهاز...', 'info');
+                
                 // إضافة مستمع لفقدان الاتصال
-                device.addEventListener('gattserverdisconnected', () => {
-                    addLog('⚠️ فقدان الاتصال بالجهاز');
+                selectedDevice.addEventListener('gattserverdisconnected', () => {
+                    addLog('⚠️ فقدان الاتصال بالجهاز', 'warning');
                     connected = false;
                     device = null;
                     characteristic = null;
                     updateUI();
                 });
 
+                // الاتصال بخادم GATT
+                const server = await selectedDevice.gatt.connect();
+                console.log('✅ GATT Connected');
+                
+                // 🔥 محاولة خدمات متعددة للتوافق
+                const serviceUUIDs = [
+                    '00001101-0000-1000-8000-00805f9b34fb', // Standard SPP
+                    '0000ffe0-0000-1000-8000-00805f9b34fb', // HC-05 Service
+                    '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Bluetooth Serial
+                    '6e400001-b5a3-f393-e0a9-e50e24dcca9e'  // Nordic UART
+                ];
+                
+                let service = null;
+                let connectedUUID = '';
+                
+                for (const uuid of serviceUUIDs) {
+                    try {
+                        service = await server.getPrimaryService(uuid);
+                        connectedUUID = uuid;
+                        console.log(`✅ Connected to service: ${uuid}`);
+                        break;
+                    } catch (e) {
+                        console.log(`⚠️ Failed to get service ${uuid}:`, e.message);
+                    }
+                }
+                
+                if (!service) {
+                    throw new Error('لم يتم العثور على خدمة مناسبة');
+                }
+                
+                addLog(`✅ متصل بالخدمة: ${connectedUUID}`, 'success');
+                
+                // 🔥 محاولة خصائص متعددة
+                const characteristicUUIDs = [
+                    '00001101-0000-1000-8000-00805f9b34fb',
+                    '0000ffe1-0000-1000-8000-00805f9b34fb',
+                    '49535343-1e4d-4bd9-ba61-23c647249616',
+                    '6e400002-b5a3-f393-e0a9-e50e24dcca9e'
+                ];
+                
+                for (const uuid of characteristicUUIDs) {
+                    try {
+                        characteristic = await service.getCharacteristic(uuid);
+                        console.log(`✅ Got characteristic: ${uuid}`);
+                        break;
+                    } catch (e) {
+                        console.log(`⚠️ Failed to get characteristic ${uuid}:`, e.message);
+                    }
+                }
+                
+                if (!characteristic) {
+                    throw new Error('لم يتم العثور على خاصية الكتابة');
+                }
+                
                 // الاتصال الناجح
                 connected = true;
-                addLog('🎉 تم الاتصال بالسيارة بنجاح!');
+                device = selectedDevice;
+                addLog('🎉 تم الاتصال بالسيارة بنجاح!', 'success');
                 
                 // إرسال أمر توقف أولي
                 await sendCommand('S');
                 
                 updateUI();
-
+                
             } catch (error) {
-                console.error('❌ Bluetooth error:', error);
-                
-                if (error.name === 'NotFoundError') {
-                    addLog('❌ لم يتم العثور على HC-05');
-                    addLog('💡 تأكد من:');
-                    addLog('1. HC-05 مضاء (الضوء يرمش)');
-                    addLog('2. البلوتوث مفعل على الهاتف');
-                    addLog('3. HC-05 ليس متصلاً بجهاز آخر');
-                } else if (error.name === 'SecurityError') {
-                    addLog('❌ خطأ في الأذونات');
-                    addLog('💡 امنح الإذن للمتصفح للوصول للبلوتوث');
-                } else if (error.message.includes('دعم')) {
-                    addLog('❌ ' + error.message);
-                    connectBtn.disabled = true;
-                    connectBtn.textContent = 'غير مدعوم';
-                } else {
-                    addLog(`❌ خطأ: ${error.message}`);
-                }
-                
+                console.error('❌ Connection error:', error);
+                addLog(`❌ فشل الاتصال: ${error.message}`, 'error');
+                connected = false;
+                device = null;
+                characteristic = null;
                 updateUI();
             }
         }
@@ -327,14 +451,15 @@
                     // إرسال أمر توقف قبل قطع الاتصال
                     await sendCommand('S');
                     device.gatt.disconnect();
+                    addLog('تم قطع الاتصال', 'info');
                 }
             } catch (error) {
                 console.error('Disconnect error:', error);
+                addLog('❌ خطأ في قطع الاتصال', 'error');
             } finally {
                 connected = false;
                 device = null;
                 characteristic = null;
-                addLog('تم قطع الاتصال');
                 updateUI();
             }
         }
@@ -347,10 +472,10 @@
             const change = (Math.random() - 0.5) * 50;
             flameValue = Math.max(0, Math.min(1023, flameValue + change));
             
-            // محاكاة حريق عشوائي (7% فرصة)
-            if (Math.random() < 0.07 && flameValue > 500) {
+            // محاكاة حريق عشوائي (10% فرصة)
+            if (Math.random() < 0.1 && flameValue > 500) {
                 flameValue = Math.floor(Math.random() * 400);
-                addLog('🔥 تم اكتشاف حريق! السيارة تتوقف');
+                addLog('🔥 تم اكتشاف حريق! السيارة تتوقف', 'warning');
                 
                 // إرسال أمر توقف تلقائياً
                 sendCommand('S');
@@ -369,9 +494,12 @@
 
         // إعداد الأحداث
         function setupEvents() {
-            // زر الاتصال
-            connectBtn.addEventListener('click', connectBluetooth);
-
+            // زر البحث عن أجهزة
+            connectBtn.addEventListener('click', discoverBluetoothDevices);
+            
+            // زر قطع الاتصال
+            disconnectBtn.addEventListener('click', disconnectBluetooth);
+            
             // أزرار التحكم
             forwardBtn.addEventListener('click', () => sendCommand('F'));
             backwardBtn.addEventListener('click', () => sendCommand('B'));
@@ -409,8 +537,8 @@
 
         // بدء التطبيق
         function init() {
-            addLog('🚀 نظام التحكم جاهز للعمل');
-            addLog('📱 اضغط "اتصل بالسيارة" للبدء');
+            addLog('🚀 نظام التحكم في السيارة الذكية', 'success');
+            addLog('📱 اضغط "بحث عن أجهزة بلوتوث" للبدء', 'info');
             
             setupEvents();
             updateUI();
@@ -420,13 +548,13 @@
             
             // التحقق من دعم البلوتوث
             if (!navigator.bluetooth) {
-                addLog('⚠️ هذا المتصفح لا يدعم Web Bluetooth');
-                addLog('💡 استخدم Chrome على Android أو Edge على Windows');
+                addLog('❌ هذا المتصفح لا يدعم Web Bluetooth API', 'error');
+                addLog('💡 استخدم Chrome على Android أو Edge على Windows', 'info');
                 connectBtn.disabled = true;
-                connectBtn.textContent = 'غير مدعوم';
+                connectBtn.textContent = '❌ غير مدعوم';
             } else {
-                addLog('✅ المتصفح يدعم Web Bluetooth API');
-                addLog('🔗 اضغط زر الاتصال للبحث عن HC-05');
+                addLog('✅ المتصفح يدعم Web Bluetooth API', 'success');
+                addLog('🔗 تأكد من تشغيل البلوتوث على الهاتف', 'info');
             }
         }
 
